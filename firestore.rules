@@ -1,0 +1,76 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function ownsResource(field) {
+      return signedIn() && resource.data[field] == request.auth.uid;
+    }
+
+    function ownsRequest(field) {
+      return signedIn() && request.resource.data[field] == request.auth.uid;
+    }
+
+    match /users/{uid} {
+      allow read, create, update: if isOwner(uid);
+      allow delete: if false;
+    }
+
+    match /bikes/{bikeId} {
+      allow read: if signedIn();
+      allow create, update, delete: if false;
+
+      match /reviews/{reviewId} {
+        allow read: if signedIn();
+        allow create: if signedIn() &&
+          request.resource.data.userId == request.auth.uid &&
+          request.resource.data.rating is number;
+        allow update, delete: if false;
+      }
+    }
+
+    match /bookings/{bookingId} {
+      allow read: if ownsResource('userId') || ownsResource('ownerUid');
+      allow create, update, delete: if false;
+    }
+
+    match /payments/{paymentId} {
+      allow read: if ownsResource('userId') || ownsResource('ownerUid');
+      allow create, update, delete: if false;
+    }
+
+    match /fileUploads/{uploadId} {
+      allow read: if ownsResource('ownerUid');
+      allow create, update, delete: if false;
+    }
+
+    match /damage_reports/{reportId} {
+      allow read: if ownsResource('userId') || ownsResource('ownerUid');
+      allow create: if signedIn() &&
+        ownsRequest('userId') &&
+        request.resource.data.description is string;
+      allow update: if ownsResource('userId');
+      allow delete: if false;
+    }
+
+    match /withdrawal_requests/{requestId} {
+      allow read: if ownsResource('userId');
+      allow create, update, delete: if false;
+    }
+
+    match /webhookEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
