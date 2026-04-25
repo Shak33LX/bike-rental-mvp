@@ -406,6 +406,26 @@ button{font-family:var(--font);}
 .llp-ic{width:58px;height:58px;background:linear-gradient(135deg,rgba(255,255,255,.2),rgba(255,255,255,.06));padding:4px;box-shadow:0 10px 30px rgba(0,0,0,.18);backdrop-filter:blur(10px);}
 .logo-ic{width:42px;height:42px;background:rgba(255,255,255,.14);padding:3px;box-shadow:0 12px 24px rgba(0,0,0,.16);backdrop-filter:blur(8px);}
 .avatar-media{width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:50%;}
+#bike-list-inner,.bpb,.view-inner,.map-dock-body{scrollbar-width:auto;scrollbar-color:color-mix(in srgb,var(--brand) 50%,transparent) color-mix(in srgb,var(--brand-xs) 45%,transparent);}
+#bike-list-inner::-webkit-scrollbar,.bpb::-webkit-scrollbar,.view-inner::-webkit-scrollbar,.map-dock-body::-webkit-scrollbar{width:14px;height:14px;}
+#bike-list-inner::-webkit-scrollbar-track,.bpb::-webkit-scrollbar-track,.view-inner::-webkit-scrollbar-track,.map-dock-body::-webkit-scrollbar-track{background:color-mix(in srgb,var(--brand-xs) 40%,transparent);border-radius:999px;}
+#bike-list-inner::-webkit-scrollbar-thumb,.bpb::-webkit-scrollbar-thumb,.view-inner::-webkit-scrollbar-thumb,.map-dock-body::-webkit-scrollbar-thumb{background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 72%,#7cb7ff),var(--brand-d));border-radius:999px;border:3px solid transparent;background-clip:padding-box;}
+#bike-list-inner::-webkit-scrollbar-thumb:hover,.bpb::-webkit-scrollbar-thumb:hover,.view-inner::-webkit-scrollbar-thumb:hover,.map-dock-body::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,var(--brand),var(--brand-d));background-clip:padding-box;}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#fff!important;}
+.leaflet-popup-content-wrapper{border-color:#d7e2f0!important;}
+.leaflet-popup-content{margin:16px 18px!important;}
+.leaflet-popup-close-button{color:#60738a!important;padding:10px 12px 0 0!important;}
+.leaflet-popup-close-button:hover{color:#10233d!important;}
+.bike-popup{min-width:250px;color:#10233d!important;line-height:1.45;}
+.bike-popup strong{font-size:16px;font-weight:800;letter-spacing:-.02em;color:#10233d;margin-bottom:2px;}
+.bike-popup .popup-owner{display:block;color:#63778d;font-weight:600;}
+.bike-popup .popup-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.bike-popup .popup-price{color:#0a5dcc;font-weight:800;font-size:24px;line-height:1;}
+.bike-popup .rt-stars{margin:0;}
+.bike-popup .popup-availability{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;background:#e7f8ed;color:#166534;font-weight:800;font-size:12px;}
+.bike-popup .popup-location{margin-top:10px;color:#1d3652;font-weight:700;}
+.bike-popup .popup-distance{margin-top:3px;color:#60738a;font-weight:600;}
+.popup-select-btn{margin-top:14px;height:42px;border-radius:12px;font-size:13px;font-weight:800;box-shadow:0 12px 20px rgba(21,101,192,.18);}
 
 .browse-shell{display:grid;grid-template-columns:minmax(280px,320px) minmax(0,1fr) auto;gap:18px;padding:18px;flex:1;min-height:0;overflow:hidden;background:linear-gradient(180deg,var(--bg) 0%,var(--card2) 100%);}
 .bike-col-upgraded{width:auto;border:1px solid var(--bdr);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;}
@@ -421,17 +441,29 @@ button{font-family:var(--font);}
 .metric-label{font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.08em;}
 .metric-value{font-size:24px;font-weight:700;color:var(--txt);line-height:1.1;}
 .metric-sub{font-size:11px;line-height:1.5;color:var(--txt2);}
-.booking-stage{display:flex;flex-direction:column;min-height:0;flex:1;border:1px solid var(--bdr);border-radius:24px;background:var(--card);box-shadow:var(--shadow);overflow:hidden;}
-.booking-stage-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:22px;border-bottom:1px solid var(--bdr);background:linear-gradient(135deg,var(--brand-xs),transparent);}
+.booking-stage{display:flex;flex-direction:column;min-height:0;flex:1;border:1px solid var(--bdr);border-radius:28px;background:linear-gradient(180deg,color-mix(in srgb,var(--card) 92%,var(--brand-xs)) 0%,var(--card) 100%);box-shadow:var(--shadow);overflow:hidden;}
+.booking-stage-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding:24px 26px;border-bottom:1px solid var(--bdr);background:radial-gradient(circle at top left,color-mix(in srgb,var(--brand-xs) 92%,transparent),transparent 58%),linear-gradient(135deg,color-mix(in srgb,var(--brand-xs) 85%,var(--card)) 0%,transparent 100%);}
 .booking-stage-kicker{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--brand);}
-.booking-stage-title{margin-top:6px;font-size:26px;font-weight:700;letter-spacing:-.03em;color:var(--txt);}
-.booking-stage-sub{max-width:340px;font-size:12px;line-height:1.7;color:color-mix(in srgb,var(--txt) 78%,transparent);}
-.booking-stage-body{padding:22px;gap:20px;}
+.booking-stage-title{margin-top:6px;font-size:clamp(1.9rem,2.5vw,2.45rem);font-weight:800;line-height:1.05;letter-spacing:-.04em;color:var(--txt);}
+.booking-stage-sub{max-width:460px;font-size:13px;line-height:1.7;color:color-mix(in srgb,var(--txt) 78%,transparent);}
+.booking-stage-body{padding:24px;gap:20px;}
 .empty-booking-state{padding:46px 12px;text-align:center;max-width:520px;margin:auto;}
 .empty-booking-icon{font-size:44px;margin-bottom:12px;}
 .empty-booking-title{font-size:20px;font-weight:700;color:var(--txt);}
 .empty-booking-copy{margin-top:8px;font-size:13px;line-height:1.8;color:color-mix(in srgb,var(--txt) 74%,transparent);}
-.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;align-items:start;}
+.bpb{padding:24px;display:block;overflow:auto;scrollbar-gutter:stable;}
+.booking-layout{display:grid;grid-template-columns:minmax(0,1.22fr) minmax(300px,.78fr);gap:20px;align-items:start;min-height:100%;}
+.booking-overview,.booking-checkout{display:grid;gap:18px;align-content:start;min-width:0;}
+.booking-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:22px;border-radius:22px;border:1px solid color-mix(in srgb,var(--brand) 12%,var(--bdr));background:linear-gradient(135deg,color-mix(in srgb,var(--brand-xs) 78%,var(--card)) 0%,var(--card) 100%);box-shadow:var(--shadow);}
+.booking-hero-kicker{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--brand);}
+.booking-hero-title{margin-top:8px;font-size:clamp(1.7rem,2.5vw,2.15rem);font-weight:800;line-height:1.03;letter-spacing:-.04em;color:var(--txt);}
+.booking-hero-copy{margin-top:10px;font-size:13px;line-height:1.8;color:var(--txt2);max-width:580px;}
+.booking-hero-copy strong{color:var(--txt);}
+.booking-pill-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;max-width:360px;}
+.booking-pill{min-width:138px;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.72);border:1px solid color-mix(in srgb,var(--brand) 14%,var(--bdr));backdrop-filter:blur(10px);display:flex;flex-direction:column;gap:5px;}
+.booking-pill-label{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--txt2);}
+.booking-pill-value{font-size:15px;font-weight:800;color:var(--txt);}
+.detail-grid{display:grid;grid-template-columns:minmax(220px,300px) minmax(0,1fr);gap:18px;align-items:start;}
 .detail-card{background:linear-gradient(160deg,color-mix(in srgb,var(--brand-xs) 62%,var(--card)) 0%,var(--card) 100%);border:1px solid color-mix(in srgb,var(--brand) 16%,var(--bdr));border-radius:20px;padding:18px;box-shadow:var(--shadow);}
 .detail-card-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
 .detail-avatar{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--brand),var(--brand-d));color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;letter-spacing:.04em;flex-shrink:0;box-shadow:0 10px 24px rgba(21,101,192,.22);}
@@ -443,10 +475,22 @@ button{font-family:var(--font);}
 .detail-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--txt2);}
 .detail-value{font-size:13px;font-weight:700;color:var(--txt);text-align:right;line-height:1.45;word-break:break-word;}
 .detail-value.soft{font-weight:600;color:color-mix(in srgb,var(--txt) 82%,transparent);}
+.booking-panel-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}
+.booking-section-card,.checkout-card{padding:18px;border-radius:20px;border:1px solid color-mix(in srgb,var(--brand) 12%,var(--bdr));background:linear-gradient(180deg,color-mix(in srgb,var(--card) 88%,var(--brand-xs)) 0%,var(--card) 100%);box-shadow:var(--shadow);}
+.booking-section-title{font-size:11px;font-weight:800;color:var(--txt2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;}
+.section-actions{margin-top:14px;display:flex;justify-content:flex-end;}
 .location-note{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,var(--brand-xs) 72%,var(--card));border:1px solid color-mix(in srgb,var(--brand) 12%,var(--bdr));font-size:12px;line-height:1.65;color:var(--txt);}
 .location-note strong{display:block;font-size:12px;color:var(--txt);margin-bottom:2px;}
-.slotgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
-.slot{padding:14px 10px;border-radius:12px;font-size:12px;font-weight:700;}
+.checkout-card-accent{background:linear-gradient(180deg,color-mix(in srgb,var(--brand-xs) 92%,var(--card)) 0%,var(--card) 100%);}
+.booking-stack{display:grid;gap:10px;}
+.checkout-focus-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;}
+.checkout-total{font-size:34px;font-weight:800;line-height:1;color:var(--txt);}
+.checkout-note{margin-top:6px;font-size:12px;line-height:1.6;color:var(--txt2);}
+.checkout-status-chip{display:inline-flex;align-items:center;justify-content:center;padding:10px 12px;border-radius:999px;background:var(--green-s);color:#166534;font-size:11px;font-weight:800;white-space:nowrap;}
+.summary-list{display:grid;gap:10px;}
+.slotgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px;}
+.slot{padding:12px 10px;border-radius:14px;font-size:12px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:56px;line-height:1.25;}
+.slot small{display:block;margin-top:4px;font-size:10px;font-weight:700;color:inherit;opacity:.72;}
 .map-dock{width:92px;display:flex;flex-direction:column;gap:0;border:1px solid var(--bdr);border-radius:20px;background:var(--card);box-shadow:var(--shadow);overflow:hidden;transition:width .25s ease;}
 .map-dock.expanded{width:min(34vw,440px);}
 .map-dock-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px;border-bottom:1px solid var(--bdr);}
@@ -489,12 +533,18 @@ button{font-family:var(--font);}
 .profile-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
 .profile-action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
 .ghost-link-btn{padding:10px 14px;border-radius:12px;border:1px solid var(--bdr);background:var(--card2);color:var(--txt);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);}
+.secondary-call{margin:0!important;width:100%;}
+.action-row{display:grid;gap:10px;margin-top:18px;}
+.inline-warning{padding:12px 14px;border-radius:14px;background:var(--err-s);color:#991b1b;font-size:12px;font-weight:700;text-align:center;}
+.checkout-security{margin-top:12px;font-size:11px;color:var(--txt3);text-align:center;}
 
 @media(max-width:1180px){
   .browse-shell{grid-template-columns:minmax(250px,300px) minmax(0,1fr);}
   .map-dock{position:fixed;right:18px;top:86px;bottom:18px;z-index:500;width:92px;}
   .map-dock.expanded{width:min(60vw,440px);}
   .workspace-metrics{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .booking-layout{grid-template-columns:1fr;}
+  .booking-panel-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
   .owner-grid{grid-template-columns:1fr;}
 }
 
@@ -538,6 +588,11 @@ button{font-family:var(--font);}
   .workspace-metrics{grid-template-columns:1fr;}
   .metric-value{font-size:clamp(2rem,8vw,2.5rem);}
   .metric-sub,.metric-label{font-size:12px;}
+  .booking-hero{flex-direction:column;}
+  .booking-pill-row{justify-content:flex-start;max-width:none;}
+  .booking-pill{flex:1 1 150px;}
+  .detail-grid,.booking-panel-grid{grid-template-columns:1fr;}
+  .checkout-focus-row{flex-direction:column;}
   .profile-form-grid,.owner-form-grid{grid-template-columns:1fr;}
   .slotgrid{grid-template-columns:repeat(2,minmax(0,1fr));}
   .bike-col-upgraded,.browse-main,.booking-stage,.booking-stage-body{overflow:visible;}
@@ -559,6 +614,7 @@ button{font-family:var(--font);}
   .workspace-btn{width:100%;justify-content:center;}
   .browse-toolbar-actions{width:100%;}
   .browse-toolbar-actions .workspace-btn{flex:1 1 100%;}
+  .slotgrid{grid-template-columns:1fr;}
   .sumrow,.toggle-row{gap:10px;}
   .earn-grid{grid-template-columns:1fr;}
   .card-box{padding:14px;}
@@ -1185,10 +1241,15 @@ async function apiRequest(path,{method='GET',body,headers={}}={}){
     opts.headers['Content-Type']='application/json';
     opts.body=JSON.stringify(body);
   }
-  const resp=await fetch(`${API_BASE_URL}${path}`,opts);
+  let resp;
+  try{
+    resp=await fetch(`${API_BASE_URL}${path}`,opts);
+  }catch(error){
+    throw new Error(toUserFacingErrorMessage(error,'Unable to reach the RideShare backend right now.'));
+  }
   const isJson=(resp.headers.get('content-type')||'').includes('application/json');
   const data=isJson?await resp.json():null;
-  if(!resp.ok)throw new Error(data?.error||`Request failed with status ${resp.status}`);
+  if(!resp.ok)throw new Error(toUserFacingErrorMessage(data?.error||`Request failed with status ${resp.status}`));
   return data;
 }
 
@@ -1227,8 +1288,29 @@ function escapeHtml(value){
   return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 }
 
+function toUserFacingErrorMessage(error,fallback='Something went wrong.'){
+  const raw=String(error?.message||error||'').trim();
+  if(!raw)return fallback;
+  if(/UNAUTHENTICATED|Expected OAuth 2 access token|invalid authentication credential/i.test(raw)){
+    return 'The booking server is not authenticated with Firebase yet. Add the Firebase service-account env vars on EC2 and restart the API.';
+  }
+  if(/Failed to fetch|NetworkError|Load failed|network request/i.test(raw)){
+    return 'RideShare could not reach the backend. Check the EC2 API URL, CORS settings, and internet connection.';
+  }
+  return raw;
+}
+
 function getBikeLocationLabel(bike,ownerProfile={}){
-  return bike?.locationLabel||ownerProfile?.location?.label||ownerProfile?.city||'Owner pickup location';
+  return bike?.locationLabel||bike?.ownerCity||ownerProfile?.location?.label||ownerProfile?.city||'Owner pickup location';
+}
+
+function getPreferredSlotIndex(bike,preferredIndex=null){
+  const slots=Array.isArray(bike?.slots)?bike.slots:[];
+  if(Number.isInteger(preferredIndex)&&preferredIndex>=0&&preferredIndex<slots.length&&!slots[preferredIndex]?.taken){
+    return preferredIndex;
+  }
+  const firstOpen=slots.findIndex(slot=>!slot.taken);
+  return firstOpen>=0?firstOpen:0;
 }
 
 async function getOwnerProfile(ownerUid){
@@ -1288,7 +1370,7 @@ function requestCurrentCoordinates({recenter=true,timeout=10000}={}){
         if(viewSub)viewSub.textContent=`Chennai · ${bikeData.length} live bikes nearby`;
       }).finally(()=>{
         renderBikeList(curFilter);
-        if(selBike)selectBike(selBike.id);
+        if(selBike)selectBike(selBike.id,{preserveSlot:true});
         syncOwnedListingsLocation();
       });
       resolve(currentCoords);
@@ -1884,7 +1966,7 @@ window.locateUser=function(){
     if(viewSub)viewSub.textContent=`Chennai · ${bikeData.length} live bikes nearby`;
     if(leafMap)leafMap.setView([12.8970,80.0040],15);
     renderBikeList(curFilter);
-    if(selBike)selectBike(selBike.id);
+    if(selBike)selectBike(selBike.id,{preserveSlot:true});
   });
 };
 
@@ -1898,7 +1980,7 @@ function loadBikesRealtime(){
     renderBikeList(curFilter);
     renderBikeMarkers();
     updateStats();
-    if(selBike)selectBike(selBike.id);
+    if(selBike)selectBike(selBike.id,{preserveSlot:true});
   });
 }
 
@@ -1918,7 +2000,7 @@ function renderBikeMarkers(){
     const ratingMarkup=getPopupRatingMarkup(b);
     const pickupLabel=escapeHtml(getBikeLocationLabel(b));
     const m=L.marker([b.lat,b.lng],{icon:getBikeIcon(b)}).addTo(leafMap);
-    m.bindPopup(`<div class="bike-popup"><strong>${escapeHtml(b.name)}</strong><br/>${escapeHtml(b.owner||'Owner')} · ${escapeHtml(b.bikeType||'Bike')}<br/><span class="popup-price">₹${b.price}/hr</span> &nbsp; ${ratingMarkup}<br/><span style="color:#166534;font-weight:700;">● ${availableSlots} open slot${availableSlots===1?'':'s'}</span><br/>📍 ${pickupLabel}<br/>${distanceText} away<br/><button class="popup-select-btn" onclick="selectBike('${b.id}')">Select &amp; book</button></div>`,{maxWidth:220});
+    m.bindPopup(`<div class="bike-popup"><strong>${escapeHtml(b.name)}</strong><span class="popup-owner">${escapeHtml(b.owner||'Owner')} · ${escapeHtml(b.bikeType||'Bike')}</span><div class="popup-meta"><span class="popup-price">₹${b.price}/hr</span>${ratingMarkup}<span class="popup-availability">● ${availableSlots} open slot${availableSlots===1?'':'s'}</span></div><div class="popup-location">📍 ${pickupLabel}</div><div class="popup-distance">${distanceText} away</div><button class="popup-select-btn" onclick="selectBike('${b.id}')">Select &amp; book</button></div>`,{maxWidth:280});
     bikeMarkers[b.id]=m;
   });
 }
@@ -1981,9 +2063,11 @@ function renderStars(rating,sz=11){
 }
 
 /* ════ SELECT BIKE ════ */
-window.selectBike=async function(id){
+window.selectBike=async function(id,{preserveSlot=false}={}){
+  const previousBikeId=selBike?.id||null;
+  const previousSlot=selSlot;
   selBike=bikeData.find(b=>b.id===id);if(!selBike)return;
-  selSlot=selBike.slots?.findIndex(s=>!s.taken)??0;if(selSlot<0)selSlot=0;
+  selSlot=getPreferredSlotIndex(selBike,preserveSlot&&previousBikeId===id?previousSlot:null);
   renderBikeList(curFilter);
   /* Fly map to bike */
   if(leafMap&&selBike.lat&&selBike.lng){leafMap.flyTo([selBike.lat,selBike.lng],16,{duration:1});bikeMarkers[id]?.openPopup();}
@@ -2005,13 +2089,16 @@ window.selectBike=async function(id){
   const distanceKm=bikeDistanceKm(selBike);
   const distanceText=formatDistance(distanceKm);
   const ownerName=ownerProfile.fullName||ownerProfile.displayName||selBike.owner||'Owner';
-  const ownerEmail=ownerProfile.email||selBike.ownerEmail||'';
-  const contactNumber=ownerProfile.phone||selBike.contactNumber||selBike.ownerPhone||'';
-  const ownerCity=ownerProfile.city||'';
+  const ownerEmail=selBike.ownerEmail||ownerProfile.email||'';
+  const contactNumber=selBike.contactNumber||selBike.ownerPhone||ownerProfile.phone||'';
+  const ownerCity=selBike.ownerCity||ownerProfile.city||'';
   const pickupLabel=getBikeLocationLabel(selBike,ownerProfile);
   const ownerInitials=ownerName.split(' ').filter(Boolean).map(part=>part[0]).join('').slice(0,2).toUpperCase()||'RS';
   const openSlots=openSlotCount(selBike);
-  selSlot=selBike.slots?.findIndex(s=>!s.taken)??0;
+  const selectedSlot=selBike.slots?.[selSlot]?.t||'Select a slot';
+  const ratingSummary=avgRating===null?'New listing':`${avgRating.toFixed(1)}★`;
+  const profileStatus=contactNumber?'Call owner instantly':'Contact shared after booking';
+  const todayLabel=new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
   const safeOwnerName=escapeHtml(ownerName);
   const safeOwnerEmail=escapeHtml(ownerEmail||'Shared after booking');
   const safeContactNumber=escapeHtml(contactNumber||'Shared after booking');
@@ -2027,55 +2114,104 @@ window.selectBike=async function(id){
   document.getElementById('selected-distance-sub').textContent=`${openSlots} open slot${openSlots===1?'':'s'} today · ${selBike.bikeType||'Bike'} · ${pickupLabel}`;
   
   document.getElementById('bpb-content').innerHTML=`
-    <div class="detail-grid">
-      ${bikeImageMarkup(selBike)}
-      <div class="detail-card">
-        <div class="detail-card-head">
-          <div class="detail-avatar">${escapeHtml(ownerInitials)}</div>
+    <div class="booking-layout">
+      <div class="booking-overview">
+        <div class="booking-hero">
           <div>
-            <div class="detail-name">${safeOwnerName}</div>
-            <div class="detail-sub">${safeBikeName} · ${safeBikeType}</div>
+            <div class="booking-hero-kicker">Ready to book</div>
+            <div class="booking-hero-title">${safeBikeName}</div>
+            <div class="booking-hero-copy">${safeBikeType} listed by ${safeOwnerName}. Pickup is set to <strong>${safePickupLabel}</strong> and the live pin is ${escapeHtml(distanceText)} away from you.</div>
+          </div>
+          <div class="booking-pill-row">
+            <div class="booking-pill"><span class="booking-pill-label">Today</span><span class="booking-pill-value">${escapeHtml(todayLabel)}</span></div>
+            <div class="booking-pill"><span class="booking-pill-label">Live slots</span><span class="booking-pill-value">${openSlots}</span></div>
+            <div class="booking-pill"><span class="booking-pill-label">Hourly price</span><span class="booking-pill-value">₹${price}/hr</span></div>
+            <div class="booking-pill"><span class="booking-pill-label">Community</span><span class="booking-pill-value">${escapeHtml(ratingSummary)}</span></div>
           </div>
         </div>
-        <div class="detail-table">
-          <div class="detail-row"><div class="detail-label">Contact</div><div class="detail-value">${safeContactNumber}</div></div>
-          <div class="detail-row"><div class="detail-label">Email</div><div class="detail-value soft">${safeOwnerEmail}</div></div>
-          <div class="detail-row"><div class="detail-label">Pickup area</div><div class="detail-value">${safePickupLabel}</div></div>
-          <div class="detail-row"><div class="detail-label">City</div><div class="detail-value soft">${safeOwnerCity}</div></div>
-          <div class="detail-row"><div class="detail-label">Registration</div><div class="detail-value soft">${safeRegNo}</div></div>
-          <div class="detail-row"><div class="detail-label">Open slots</div><div class="detail-value">${openSlots} slot${openSlots===1?'':'s'}</div></div>
+        <div class="detail-grid">
+          ${bikeImageMarkup(selBike)}
+          <div class="detail-card">
+            <div class="detail-card-head">
+              <div class="detail-avatar">${escapeHtml(ownerInitials)}</div>
+              <div>
+                <div class="detail-name">${safeOwnerName}</div>
+                <div class="detail-sub">${safeBikeName} · ${safeBikeType}</div>
+              </div>
+            </div>
+            <div class="detail-table">
+              <div class="detail-row"><div class="detail-label">Contact</div><div class="detail-value">${safeContactNumber}</div></div>
+              <div class="detail-row"><div class="detail-label">Email</div><div class="detail-value soft">${safeOwnerEmail}</div></div>
+              <div class="detail-row"><div class="detail-label">Pickup area</div><div class="detail-value">${safePickupLabel}</div></div>
+              <div class="detail-row"><div class="detail-label">City</div><div class="detail-value soft">${safeOwnerCity}</div></div>
+              <div class="detail-row"><div class="detail-label">Registration</div><div class="detail-value soft">${safeRegNo}</div></div>
+              <div class="detail-row"><div class="detail-label">Response</div><div class="detail-value soft">${escapeHtml(profileStatus)}</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="booking-panel-grid">
+          <div class="booking-section-card">
+            <div class="booking-section-title">Real-time rating</div>
+            <div class="rt-stars">${avgRating===null?'<span class="rt-count">Not rated yet</span>':`${[1,2,3,4,5].map(i=>`<span class="rt-star${i<=Math.round(avgRating)?' on':''}">★</span>`).join('')}<span class="rt-avg">${avgRating.toFixed(1)}</span><span class="rt-count"> (${revCount} reviews)</span>`}</div>
+            ${lastReview?`<div class="review-txt">"${escapeHtml(lastReview.text||'Good ride.')}" — ${escapeHtml(lastReview.renterName||'Renter')}, ${escapeHtml(lastReview.date||'recently')}</div>`:'<div class="review-txt">This bike just went live. The first renter review will appear here after the first completed trip.</div>'}
+          </div>
+          <div class="booking-section-card">
+            <div class="booking-section-title">Bike condition</div>
+            <div class="ctagrow">${conds}${warns}</div>
+          </div>
+          <div class="booking-section-card">
+            <div class="booking-section-title">Location on map</div>
+            <div class="location-note"><div>📍</div><div><strong>${safePickupLabel}</strong>${escapeHtml(distanceText)} from you · Pin synced with the owner&apos;s live listing location.</div></div>
+            <div class="section-actions"><button class="workspace-btn" type="button" onclick="toggleMapPanel(true)">Open live map</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="booking-checkout">
+        <div class="checkout-card">
+          <div class="booking-section-title">Pick a time slot</div>
+          <div class="checkout-note">Choose any open one-hour window. Your selection stays highlighted until you change bikes or the slot gets booked.</div>
+          <div class="slotgrid">${(selBike.slots||[]).map((s,i)=>`<div class="slot${s.taken?' taken':i===selSlot?' on':''}" onclick="${s.taken?'':'appSelSlot('+i+')'}">${s.t}<small>${s.taken?'Booked':'Tap to select'}</small></div>`).join('')}</div>
+        </div>
+        <div class="checkout-card">
+          <div class="booking-section-title">Pay with</div>
+          <div class="booking-stack">
+            <div class="payopt on" onclick="selPay(this)"><div class="payic" style="background:#E3F2FD;color:#1565C0;">G</div><span class="paylbl">Google Pay (GPay)</span></div>
+            <div class="payopt" onclick="selPay(this)"><div class="payic" style="background:var(--green-s);color:#166534;">CC</div><span class="paylbl">Credit / Debit card</span></div>
+            <div class="payopt" onclick="selPay(this)"><div class="payic" style="background:var(--warn-s);color:#7B5800;">₹</div><span class="paylbl">Cash on pickup</span></div>
+          </div>
+        </div>
+        <div class="checkout-card checkout-card-accent">
+          <div class="booking-section-title">Summary</div>
+          <div class="checkout-focus-row">
+            <div>
+              <div class="checkout-total">₹${total}</div>
+              <div class="checkout-note">${escapeHtml(selectedSlot)} · ${safePickupLabel}</div>
+            </div>
+            <div class="checkout-status-chip">${openSlots} open</div>
+          </div>
+          <div class="summary-list">
+            <div class="sumrow"><span>₹${price} × 1 hour</span><span>₹${price}.00</span></div>
+            <div class="sumrow"><span>Platform fee (8%)</span><span>₹${fee}</span></div>
+            <div class="sumrow tot"><span>Total</span><span>₹${total}</span></div>
+          </div>
+          <div class="action-row">
+            ${contactNumber?`<button class="lbtnout secondary-call" type="button" onclick='contactOwner(${JSON.stringify(contactNumber)},${JSON.stringify(ownerName)})'>Call owner</button>`:''}
+            ${selBike.avail?`<button class="bookbtn" onclick="confirmBooking()">Confirm booking · ₹${total}</button>`:'<div class="inline-warning">This bike is not available right now.</div>'}
+          </div>
+          <div class="checkout-security">Secured by Razorpay · 8% platform fee applied</div>
         </div>
       </div>
     </div>
-    <div><div class="psec">Real-time rating</div>
-      <div class="rt-stars">${avgRating===null?'<span class="rt-count">Not rated yet</span>':`${[1,2,3,4,5].map(i=>`<span class="rt-star${i<=Math.round(avgRating)?' on':''}">★</span>`).join('')}<span class="rt-avg">${avgRating.toFixed(1)}</span><span class="rt-count"> (${revCount} reviews)</span>`}</div>
-      ${lastReview?`<div class="review-txt">"${escapeHtml(lastReview.text||'Good ride.')}" — ${escapeHtml(lastReview.renterName||'Renter')}, ${escapeHtml(lastReview.date||'recently')}</div>`:''}
-    </div>
-    <div><div class="psec">Bike condition</div><div class="ctagrow">${conds}${warns}</div></div>
-    <div><div class="psec">Location on map</div><div class="location-note"><div>📍</div><div><strong>${safePickupLabel}</strong>${distanceText} from you · Pin synced with the owner&apos;s live listing location.</div></div><div style="margin-top:12px;display:flex;justify-content:flex-end;"><button class="workspace-btn" type="button" onclick="toggleMapPanel(true)">Open live map</button></div></div>
-    <div><div class="psec">Pick a time slot</div><div class="slotgrid">${(selBike.slots||[]).map((s,i)=>`<div class="slot${s.taken?' taken':i===selSlot?' on':''}" onclick="${s.taken?'':'appSelSlot('+i+')'}">${s.t}</div>`).join('')}</div></div>
-    <div><div class="psec">Pay with</div>
-      <div style="display:flex;flex-direction:column;gap:5px;">
-        <div class="payopt on" onclick="selPay(this)"><div class="payic" style="background:#E3F2FD;color:#1565C0;">G</div><span class="paylbl">Google Pay (GPay)</span></div>
-        <div class="payopt" onclick="selPay(this)"><div class="payic" style="background:var(--green-s);color:#166534;">CC</div><span class="paylbl">Credit / Debit card</span></div>
-        <div class="payopt" onclick="selPay(this)"><div class="payic" style="background:var(--warn-s);color:#7B5800;">₹</div><span class="paylbl">Cash on pickup</span></div>
-      </div>
-    </div>
-    <div>
-      <div class="psec">Summary</div>
-      <div class="sumrow"><span>₹${price} × 1 hour</span><span>₹${price}.00</span></div>
-      <div class="sumrow"><span>Platform fee (8%)</span><span>₹${fee}</span></div>
-      <div class="sumrow tot"><span>Total</span><span>₹${total}</span></div>
-    </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      ${contactNumber?`<button class="lbtnout" type="button" style="flex:1 1 180px;margin:0;" onclick='contactOwner(${JSON.stringify(contactNumber)},${JSON.stringify(ownerName)})'>Call owner</button>`:''}
-      ${selBike.avail?`<button class="bookbtn" style="flex:1 1 220px;" onclick="confirmBooking()">Confirm booking · ₹${total}</button>`:'<div style="text-align:center;padding:10px;font-size:12px;color:var(--err);font-weight:600;">⚠ This bike is not available right now</div>'}
-    </div>
-    <div style="font-size:10px;color:var(--txt3);text-align:center;">Secured by Razorpay · 8% platform fee applied</div>
   `;
 };
 
-window.appSelSlot=function(i){selSlot=i;selectBike(selBike.id);};
+window.appSelSlot=function(i){
+  if(!selBike||selBike.slots?.[i]?.taken)return;
+  selSlot=i;
+  selectBike(selBike.id,{preserveSlot:true});
+};
 window.selPay=function(el){document.querySelectorAll('.payopt').forEach(p=>p.classList.remove('on'));el.classList.add('on');};
 
 /* ════ BOOKING ════ */
@@ -2103,7 +2239,7 @@ window.confirmBooking=async function(){
     });
     rzp.on('payment.failed',()=>toast('Payment failed. Please try again.','fail'));
     rzp.open();
-  }catch(e){toast(e?.message||'Unable to start booking payment.','fail');}
+  }catch(e){toast(toUserFacingErrorMessage(e,'Unable to start booking payment.'),'fail');}
 };
 
 /* ════ RATING SYSTEM ════ */

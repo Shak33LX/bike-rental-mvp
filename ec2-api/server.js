@@ -246,6 +246,7 @@ function buildListingDocument(payload, ownerContext) {
     owner: ownerContext.ownerName,
     ownerUid: ownerContext.ownerUid,
     ownerEmail: ownerContext.ownerEmail,
+    ownerCity: ownerContext.ownerCity || "",
     ownerPhone: contactNumber,
     contactNumber,
     price: Number(price.toFixed(2)),
@@ -302,7 +303,14 @@ function buildSignature(orderId, paymentId) {
 }
 
 function getUserMessage(error, fallback) {
-  return error?.message || error?.code || fallback;
+  const raw = String(error?.message || error?.code || "").trim();
+  if (!raw) {
+    return fallback;
+  }
+  if (/Expected OAuth 2 access token|invalid authentication credential|UNAUTHENTICATED/i.test(raw)) {
+    return "Server Firebase credentials are not configured. Set FIREBASE_SERVICE_ACCOUNT_PATH or FIREBASE_SERVICE_ACCOUNT_JSON on EC2 and restart the API.";
+  }
+  return raw;
 }
 
 async function authMiddleware(req, res, next) {
@@ -399,6 +407,7 @@ app.post("/listings", authMiddleware, async (req, res) => {
 
 app.patch("/listings/:bikeId", authMiddleware, async (req, res) => {
   try {
+    const profile = await getUserProfile(req.user.uid);
     const bikeRef = db.collection("bikes").doc(req.params.bikeId);
     const bikeSnap = await bikeRef.get();
     if (!bikeSnap.exists) {
@@ -411,6 +420,15 @@ app.patch("/listings/:bikeId", authMiddleware, async (req, res) => {
     }
 
     const updates = { updatedAt: FieldValue.serverTimestamp() };
+    updates.owner =
+      profile.fullName ||
+      profile.displayName ||
+      req.user.name ||
+      req.user.email?.split("@")[0] ||
+      bike.owner ||
+      "Owner";
+    updates.ownerEmail = req.user.email || profile.email || bike.ownerEmail || "";
+    updates.ownerCity = profile.city || bike.ownerCity || "";
 
     if (req.body.name || req.body.type) {
       updates.name = String(req.body.name || req.body.type).trim();
