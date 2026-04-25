@@ -26,3 +26,5 @@ yarn-error.log*
 
 # Environment files (local configs)
 /.env.*
+_tmp_module_check.mjs
+tmp-video-frames/

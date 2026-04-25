@@ -1,6 +1,8 @@
 require("dotenv").config();
 
 const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const admin = require("firebase-admin");
@@ -39,10 +41,44 @@ app.use(
   }),
 );
 
-const serviceAccount = require("./firebase-service-account.json");
+function readServiceAccountFile(configuredPath) {
+  if (!configuredPath) {
+    return null;
+  }
+
+  const resolvedPath = path.isAbsolute(configuredPath)
+    ? configuredPath
+    : path.resolve(__dirname, configuredPath);
+
+  if (!fs.existsSync(resolvedPath)) {
+    return null;
+  }
+
+  return JSON.parse(fs.readFileSync(resolvedPath, "utf8"));
+}
+
+function loadServiceAccount() {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+  }
+
+  const configuredPath =
+    process.env.FIREBASE_SERVICE_ACCOUNT_PATH || "./firebase-service-account.json";
+
+  return readServiceAccountFile(configuredPath);
+}
+
+function createFirebaseCredential() {
+  const serviceAccount = loadServiceAccount();
+  if (serviceAccount) {
+    return admin.credential.cert(serviceAccount);
+  }
+
+  return admin.credential.applicationDefault();
+}
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: createFirebaseCredential(),
 });
 
 const db = admin.firestore();
@@ -91,6 +127,16 @@ function hashString(value = "") {
 
 function derivePalette(seed) {
   return BIKE_PALETTE[hashString(seed) % BIKE_PALETTE.length];
+}
+
+function toCoordinateNumber(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Number(number.toFixed(6)) : fallback;
+}
+
+function normalizeLocationLabel(value, fallback = "") {
+  const normalized = typeof value === "string" ? value.trim() : "";
+  return (normalized || fallback || "").slice(0, 120);
 }
 
 function deriveCoordinates(seed) {
@@ -174,12 +220,25 @@ function buildListingDocument(payload, ownerContext) {
 
   const schedule = normalizeSchedule(payload.schedule);
   const palette = derivePalette(ownerContext.docId);
-  const coords = deriveCoordinates(ownerContext.docId);
+  const derivedCoords = deriveCoordinates(ownerContext.docId);
   const conditionState = buildConditionState(payload.conditionNotes);
   const regNo = String(payload.registrationNumber || payload.regNo || "").trim().toUpperCase();
   const bikeType = String(payload.bikeType || payload.category || "").trim() || "Bike";
   const contactNumber = String(payload.contactNumber || payload.ownerPhone || ownerContext.ownerPhone || "").trim();
   const photoUploadId = String(payload.photoUploadId || "").trim();
+  const ownerLocation = ownerContext.ownerLocation || {};
+  const lat = toCoordinateNumber(
+    payload.lat,
+    toCoordinateNumber(ownerLocation.lat, derivedCoords.lat),
+  );
+  const lng = toCoordinateNumber(
+    payload.lng,
+    toCoordinateNumber(ownerLocation.lng, derivedCoords.lng),
+  );
+  const locationLabel = normalizeLocationLabel(
+    payload.locationLabel,
+    normalizeLocationLabel(ownerLocation.label, ownerContext.ownerCity || ""),
+  );
 
   return {
     name,
@@ -191,8 +250,13 @@ function buildListingDocument(payload, ownerContext) {
     contactNumber,
     price: Number(price.toFixed(2)),
     dist: toCurrencyNumber(payload.dist, 0.6),
-    lat: toCurrencyNumber(payload.lat, coords.lat),
-    lng: toCurrencyNumber(payload.lng, coords.lng),
+    lat,
+    lng,
+    locationLabel: locationLabel || null,
+    locationSource:
+      locationLabel || payload.lat !== undefined || payload.lng !== undefined
+        ? "owner"
+        : "fallback",
     avail: payload.active === false ? false : true,
     active: payload.active === false ? false : true,
     approved: true,
@@ -317,6 +381,8 @@ app.post("/listings", authMiddleware, async (req, res) => {
         "Owner",
       ownerEmail: req.user.email || profile.email || "",
       ownerPhone: profile.phone || "",
+      ownerCity: profile.city || "",
+      ownerLocation: profile.location || null,
     });
 
     await listingRef.set({
@@ -369,6 +435,20 @@ app.patch("/listings/:bikeId", authMiddleware, async (req, res) => {
     }
     if (req.body.photoUploadId !== undefined) {
       updates.photoUploadId = String(req.body.photoUploadId || "").trim() || null;
+    }
+    if (req.body.locationLabel !== undefined) {
+      updates.locationLabel = normalizeLocationLabel(req.body.locationLabel) || null;
+    }
+    if (req.body.lat !== undefined || req.body.lng !== undefined) {
+      const nextLat = toCoordinateNumber(req.body.lat, toCoordinateNumber(bike.lat, null));
+      const nextLng = toCoordinateNumber(req.body.lng, toCoordinateNumber(bike.lng, null));
+      if (!Number.isFinite(nextLat) || !Number.isFinite(nextLng)) {
+        return res.status(400).json({ error: "A valid map location is required." });
+      }
+      updates.lat = nextLat;
+      updates.lng = nextLng;
+      updates.locationSource = "owner";
+      updates.locationUpdatedAt = FieldValue.serverTimestamp();
     }
     if (req.body.conditionNotes !== undefined) {
       Object.assign(updates, buildConditionState(req.body.conditionNotes));

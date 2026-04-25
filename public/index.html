@@ -425,12 +425,26 @@ button{font-family:var(--font);}
 .booking-stage-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:22px;border-bottom:1px solid var(--bdr);background:linear-gradient(135deg,var(--brand-xs),transparent);}
 .booking-stage-kicker{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--brand);}
 .booking-stage-title{margin-top:6px;font-size:26px;font-weight:700;letter-spacing:-.03em;color:var(--txt);}
-.booking-stage-sub{max-width:340px;font-size:12px;line-height:1.7;color:var(--txt2);}
+.booking-stage-sub{max-width:340px;font-size:12px;line-height:1.7;color:color-mix(in srgb,var(--txt) 78%,transparent);}
 .booking-stage-body{padding:22px;gap:20px;}
 .empty-booking-state{padding:46px 12px;text-align:center;max-width:520px;margin:auto;}
 .empty-booking-icon{font-size:44px;margin-bottom:12px;}
 .empty-booking-title{font-size:20px;font-weight:700;color:var(--txt);}
-.empty-booking-copy{margin-top:8px;font-size:13px;line-height:1.8;color:var(--txt2);}
+.empty-booking-copy{margin-top:8px;font-size:13px;line-height:1.8;color:color-mix(in srgb,var(--txt) 74%,transparent);}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;align-items:start;}
+.detail-card{background:linear-gradient(160deg,color-mix(in srgb,var(--brand-xs) 62%,var(--card)) 0%,var(--card) 100%);border:1px solid color-mix(in srgb,var(--brand) 16%,var(--bdr));border-radius:20px;padding:18px;box-shadow:var(--shadow);}
+.detail-card-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.detail-avatar{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--brand),var(--brand-d));color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;letter-spacing:.04em;flex-shrink:0;box-shadow:0 10px 24px rgba(21,101,192,.22);}
+.detail-name{font-size:16px;font-weight:700;color:var(--txt);}
+.detail-sub{margin-top:3px;font-size:12px;line-height:1.5;color:var(--txt2);}
+.detail-table{display:flex;flex-direction:column;gap:0;}
+.detail-row{display:grid;grid-template-columns:minmax(110px,auto) 1fr;gap:14px;padding:10px 0;border-top:1px solid color-mix(in srgb,var(--bdr) 82%,transparent);}
+.detail-row:first-child{border-top:none;padding-top:0;}
+.detail-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--txt2);}
+.detail-value{font-size:13px;font-weight:700;color:var(--txt);text-align:right;line-height:1.45;word-break:break-word;}
+.detail-value.soft{font-weight:600;color:color-mix(in srgb,var(--txt) 82%,transparent);}
+.location-note{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,var(--brand-xs) 72%,var(--card));border:1px solid color-mix(in srgb,var(--brand) 12%,var(--bdr));font-size:12px;line-height:1.65;color:var(--txt);}
+.location-note strong{display:block;font-size:12px;color:var(--txt);margin-bottom:2px;}
 .slotgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
 .slot{padding:14px 10px;border-radius:12px;font-size:12px;font-weight:700;}
 .map-dock{width:92px;display:flex;flex-direction:column;gap:0;border:1px solid var(--bdr);border-radius:20px;background:var(--card);box-shadow:var(--shadow);overflow:hidden;transition:width .25s ease;}
@@ -1140,6 +1154,9 @@ const db=getFirestore(FB);
 /* ════ GLOBALS ════ */
 let currentUser=null,currentProfileUrl=null,currentProfileUploadId=null,selBike=null,selSlot=0,selStar=4,curFilter='all',curSearch='',leafMap=null,userMarker=null,bikeMarkers={},dmgCurStep=1,dmgSeverity='minor',dmgPhotos=[],latestDamageReportId=null,ownerListings=[],riderBookings=[],ownerBookings=[],withdrawalRequests=[],damageReports=[],damageBikeChoices=[],selectedListingId=null,liveUnsubs=[],bikeData=[],currentCoords=null,mapExpanded=false,listingPhotoPreviewUrl=null,dmgPhotoPreviewUrls=[];
 const uploadUrlCache=new Map();
+const ownerProfileCache=new Map();
+let currentAreaLabel='Locating...';
+let lastOwnerLocationSyncKey='';
 
 function resolveApiBaseUrl(){
   const configuredMeta=document.querySelector('meta[name="rideshare-api-base"]')?.content?.trim();
@@ -1199,6 +1216,84 @@ async function getUploadDownloadUrl(uploadId){
   const promise=apiRequest(`/upload/download-url/${uploadId}`).then(data=>data.url).catch(()=>null);
   uploadUrlCache.set(uploadId,promise);
   return promise;
+}
+
+function toFiniteNumber(value){
+  const number=Number(value);
+  return Number.isFinite(number)?number:null;
+}
+
+function escapeHtml(value){
+  return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+}
+
+function getBikeLocationLabel(bike,ownerProfile={}){
+  return bike?.locationLabel||ownerProfile?.location?.label||ownerProfile?.city||'Owner pickup location';
+}
+
+async function getOwnerProfile(ownerUid){
+  if(!ownerUid)return{};
+  if(ownerProfileCache.has(ownerUid))return ownerProfileCache.get(ownerUid);
+  const promise=getDoc(doc(db,'users',ownerUid)).then(snap=>snap.exists()?snap.data():{}).catch(()=>({}));
+  ownerProfileCache.set(ownerUid,promise);
+  return promise;
+}
+
+function buildCurrentLocationPayload(){
+  if(!currentCoords)return{};
+  return{
+    lat:Number(currentCoords.lat.toFixed(6)),
+    lng:Number(currentCoords.lng.toFixed(6)),
+    locationLabel:currentAreaLabel&&currentAreaLabel!=='Locating...'?currentAreaLabel:'Owner pickup location'
+  };
+}
+
+function setCurrentAreaLabel(label){
+  currentAreaLabel=label||'Chennai';
+  const locationEl=document.getElementById('location-txt');
+  if(locationEl)locationEl.textContent=currentAreaLabel;
+}
+
+function setCurrentCoordinates(lat,lng,{recenter=true}={}){
+  currentCoords={lat,lng};
+  if(leafMap&&recenter)leafMap.setView([lat,lng],15);
+  if(userMarker)leafMap.removeLayer(userMarker);
+  userMarker=L.circleMarker([lat,lng],{radius:9,fillColor:'#1565C0',color:'#fff',weight:3,fillOpacity:1}).addTo(leafMap).bindPopup('<strong>📍 You are here</strong>').openPopup();
+}
+
+function refreshLocationLabel(lat,lng){
+  return fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`).then(r=>r.json()).then(async d=>{
+    const area=d.address?.suburb||d.address?.neighbourhood||d.address?.town||d.address?.city||'Your location';
+    setCurrentAreaLabel(area);
+    if(currentUser){
+      try{
+        await setDoc(doc(db,'users',currentUser.uid),{location:{lat:Number(lat.toFixed(6)),lng:Number(lng.toFixed(6)),label:area,updatedAt:serverTimestamp()}},{merge:true});
+      }catch(e){}
+    }
+    const viewSub=document.getElementById('view-sub');
+    if(viewSub)viewSub.textContent=`${area} · ${bikeData.length} live bikes nearby`;
+    return area;
+  });
+}
+
+function requestCurrentCoordinates({recenter=true,timeout=10000}={}){
+  if(!navigator.geolocation)return Promise.reject(new Error('Geolocation is not supported on this device.'));
+  return new Promise((resolve,reject)=>{
+    navigator.geolocation.getCurrentPosition(async pos=>{
+      const{latitude:lat,longitude:lng}=pos.coords;
+      setCurrentCoordinates(lat,lng,{recenter});
+      refreshLocationLabel(lat,lng).catch(()=>{
+        setCurrentAreaLabel('Chennai');
+        const viewSub=document.getElementById('view-sub');
+        if(viewSub)viewSub.textContent=`Chennai · ${bikeData.length} live bikes nearby`;
+      }).finally(()=>{
+        renderBikeList(curFilter);
+        if(selBike)selectBike(selBike.id);
+        syncOwnedListingsLocation();
+      });
+      resolve(currentCoords);
+    },()=>reject(new Error('Location permission is required to place bikes on the live map.')),{enableHighAccuracy:true,timeout,maximumAge:300000});
+  });
 }
 
 function haversineKm(a,b){
@@ -1375,6 +1470,10 @@ function applyUserDocument(profileData={}){
   document.getElementById('bank-ifsc').value=profileData.bankAccount?.ifsc||'';
   document.getElementById('bank-bank').value=profileData.bankAccount?.bankName||'';
   document.getElementById('bank-upi').value=profileData.bankAccount?.upi||'';
+
+  if(profileData.location?.label&&!currentCoords){
+    setCurrentAreaLabel(profileData.location.label);
+  }
 
   setAvatarVisual('avatar-media',avatarUrl,initials);
   setAvatarVisual('sf-avatar',avatarUrl,initials);
@@ -1595,6 +1694,25 @@ function populateDamageBikeOptions(){
   select.innerHTML='<option value="">Select the bike</option>'+damageBikeChoices.map(choice=>`<option value="${choice.id}">${choice.label}</option>`).join('');
 }
 
+async function syncOwnedListingsLocation(){
+  if(!currentUser||!currentCoords||!ownerListings.length)return;
+  const roundedLat=Number(currentCoords.lat.toFixed(4));
+  const roundedLng=Number(currentCoords.lng.toFixed(4));
+  const syncKey=`${roundedLat}:${roundedLng}:${currentAreaLabel}:${ownerListings.filter(listing=>!listing.archived).map(listing=>listing.id).join(',')}`;
+  if(syncKey===lastOwnerLocationSyncKey)return;
+  lastOwnerLocationSyncKey=syncKey;
+  const locationPayload=buildCurrentLocationPayload();
+  const listingsNeedingSync=ownerListings.filter(listing=>{
+    if(listing.archived)return false;
+    const latDiff=Math.abs((toFiniteNumber(listing.lat)??999)-locationPayload.lat);
+    const lngDiff=Math.abs((toFiniteNumber(listing.lng)??999)-locationPayload.lng);
+    const labelChanged=(listing.locationLabel||'')!==(locationPayload.locationLabel||'');
+    return latDiff>0.0002||lngDiff>0.0002||labelChanged;
+  });
+  if(!listingsNeedingSync.length)return;
+  await Promise.allSettled(listingsNeedingSync.map(listing=>apiRequest(`/listings/${listing.id}`,{method:'PATCH',body:locationPayload})));
+}
+
 function loadOwnerDataRealtime(){
   if(!currentUser)return;
   trackSnapshot(query(collection(db,'bikes'),where('ownerUid','==',currentUser.uid)),async snap=>{
@@ -1604,6 +1722,7 @@ function loadOwnerDataRealtime(){
     }))).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
     renderListings();
     renderEarnings();
+    syncOwnedListingsLocation();
   });
   trackSnapshot(query(collection(db,'bookings'),where('ownerUid','==',currentUser.uid)),snap=>{
     ownerBookings=snap.docs.map(d=>({id:d.id,...d.data()})).sort(compareByCreatedDesc);
@@ -1727,7 +1846,7 @@ document.getElementById('btn-set-pass').addEventListener('click',async()=>{
 });
 document.getElementById('btn-skip-pass').addEventListener('click',()=>lshow('ls-role'));
 document.getElementById('btn-role-go').addEventListener('click',()=>{if(auth.currentUser)enterApp(auth.currentUser);});
-window.doSignOut=async()=>{clearLiveWatchers();ownerListings=[];riderBookings=[];ownerBookings=[];withdrawalRequests=[];damageReports=[];damageBikeChoices=[];selectedListingId=null;await signOut(auth);document.getElementById('page-app').style.display='none';document.getElementById('page-login').style.display='flex';lshow('ls-land');toast('Signed out.');};
+window.doSignOut=async()=>{clearLiveWatchers();ownerListings=[];riderBookings=[];ownerBookings=[];withdrawalRequests=[];damageReports=[];damageBikeChoices=[];selectedListingId=null;ownerProfileCache.clear();lastOwnerLocationSyncKey='';await signOut(auth);document.getElementById('page-app').style.display='none';document.getElementById('page-login').style.display='flex';lshow('ls-land');toast('Signed out.');};
 
 /* ════ APP INIT ════ */
 async function initApp(){
@@ -1759,16 +1878,14 @@ window.toggleMapPanel=function(forceState){
 };
 
 window.locateUser=function(){
-  if(!navigator.geolocation){document.getElementById('location-txt').textContent='Chennai';return;}
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const{latitude:lat,longitude:lng}=pos.coords;
-    currentCoords={lat,lng};
-    if(leafMap)leafMap.setView([lat,lng],15);
-    if(userMarker)leafMap.removeLayer(userMarker);
-    userMarker=L.circleMarker([lat,lng],{radius:9,fillColor:'#1565C0',color:'#fff',weight:3,fillOpacity:1}).addTo(leafMap).bindPopup('<strong>📍 You are here</strong>').openPopup();
-    /* Reverse geocode */
-    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`).then(r=>r.json()).then(d=>{const area=d.address?.suburb||d.address?.neighbourhood||d.address?.town||d.address?.city||'Your location';document.getElementById('location-txt').textContent=area;document.getElementById('view-sub').textContent=`${area} · ${bikeData.length} live bikes nearby`;renderBikeList(curFilter);if(selBike)selectBike(selBike.id);}).catch(()=>{document.getElementById('location-txt').textContent='Chennai';renderBikeList(curFilter);if(selBike)selectBike(selBike.id);});
-  },()=>{document.getElementById('location-txt').textContent='Chennai';if(leafMap)leafMap.setView([12.8970,80.0040],15);renderBikeList(curFilter);if(selBike)selectBike(selBike.id);});
+  requestCurrentCoordinates({recenter:true}).catch(()=>{
+    setCurrentAreaLabel('Chennai');
+    const viewSub=document.getElementById('view-sub');
+    if(viewSub)viewSub.textContent=`Chennai · ${bikeData.length} live bikes nearby`;
+    if(leafMap)leafMap.setView([12.8970,80.0040],15);
+    renderBikeList(curFilter);
+    if(selBike)selectBike(selBike.id);
+  });
 };
 
 /* ════ FIRESTORE: BIKES ════ */
@@ -1799,8 +1916,9 @@ function renderBikeMarkers(){
     const distanceText=formatDistance(bikeDistanceKm(b));
     const availableSlots=openSlotCount(b);
     const ratingMarkup=getPopupRatingMarkup(b);
+    const pickupLabel=escapeHtml(getBikeLocationLabel(b));
     const m=L.marker([b.lat,b.lng],{icon:getBikeIcon(b)}).addTo(leafMap);
-    m.bindPopup(`<div class="bike-popup"><strong>${b.name}</strong><br/>${b.owner||'Owner'} · ${b.bikeType||'Bike'}<br/><span class="popup-price">₹${b.price}/hr</span> &nbsp; ${ratingMarkup}<br/><span style="color:#166534;font-weight:700;">● ${availableSlots} open slot${availableSlots===1?'':'s'}</span><br/>${distanceText} away<br/><button class="popup-select-btn" onclick="selectBike('${b.id}')">Select &amp; book</button></div>`,{maxWidth:220});
+    m.bindPopup(`<div class="bike-popup"><strong>${escapeHtml(b.name)}</strong><br/>${escapeHtml(b.owner||'Owner')} · ${escapeHtml(b.bikeType||'Bike')}<br/><span class="popup-price">₹${b.price}/hr</span> &nbsp; ${ratingMarkup}<br/><span style="color:#166534;font-weight:700;">● ${availableSlots} open slot${availableSlots===1?'':'s'}</span><br/>📍 ${pickupLabel}<br/>${distanceText} away<br/><button class="popup-select-btn" onclick="selectBike('${b.id}')">Select &amp; book</button></div>`,{maxWidth:220});
     bikeMarkers[b.id]=m;
   });
 }
@@ -1867,14 +1985,13 @@ window.selectBike=async function(id){
   selBike=bikeData.find(b=>b.id===id);if(!selBike)return;
   selSlot=selBike.slots?.findIndex(s=>!s.taken)??0;if(selSlot<0)selSlot=0;
   renderBikeList(curFilter);
-  
   /* Fly map to bike */
   if(leafMap&&selBike.lat&&selBike.lng){leafMap.flyTo([selBike.lat,selBike.lng],16,{duration:1});bikeMarkers[id]?.openPopup();}
 
   /* Load real-time reviews from Firestore */
   let reviews=[];
   try{const qs=await getDocs(query(collection(db,'bikes',id,'reviews'),orderBy('createdAt','desc')));reviews=qs.docs.map(d=>d.data());}catch(e){}
-  
+  const ownerProfile=await getOwnerProfile(selBike.ownerUid);
   const storedRating=getBikeAverageRating(selBike);
   const avgRating=reviews.length?reviews.reduce((s,r)=>s+(r.rating||0),0)/reviews.length:storedRating;
   const revCount=reviews.length||getBikeReviewCount(selBike);
@@ -1882,39 +1999,60 @@ window.selectBike=async function(id){
 
   const conds=(selBike.conds||[]).map(c=>`<span class="ctag">${c}</span>`).join('');
   const warns=(selBike.warn||[]).map(w=>`<span class="ctag warn">${w}</span>`).join('');
-  const price=selBike.price;
+  const price=Number(selBike.price||0);
   const fee=(price*0.08).toFixed(2);
   const total=(price+parseFloat(fee)).toFixed(2);
   const distanceKm=bikeDistanceKm(selBike);
   const distanceText=formatDistance(distanceKm);
-  const contactNumber=selBike.contactNumber||selBike.ownerPhone||'';
+  const ownerName=ownerProfile.fullName||ownerProfile.displayName||selBike.owner||'Owner';
+  const ownerEmail=ownerProfile.email||selBike.ownerEmail||'';
+  const contactNumber=ownerProfile.phone||selBike.contactNumber||selBike.ownerPhone||'';
+  const ownerCity=ownerProfile.city||'';
+  const pickupLabel=getBikeLocationLabel(selBike,ownerProfile);
+  const ownerInitials=ownerName.split(' ').filter(Boolean).map(part=>part[0]).join('').slice(0,2).toUpperCase()||'RS';
   const openSlots=openSlotCount(selBike);
   selSlot=selBike.slots?.findIndex(s=>!s.taken)??0;
+  const safeOwnerName=escapeHtml(ownerName);
+  const safeOwnerEmail=escapeHtml(ownerEmail||'Shared after booking');
+  const safeContactNumber=escapeHtml(contactNumber||'Shared after booking');
+  const safeOwnerCity=escapeHtml(ownerCity||'Not shared yet');
+  const safePickupLabel=escapeHtml(pickupLabel);
+  const safeBikeName=escapeHtml(selBike.name||'Bike');
+  const safeBikeType=escapeHtml(selBike.bikeType||'Bike');
+  const safeRegNo=escapeHtml(selBike.regNo||'Shared after verification');
   
-  document.getElementById('bp-title').textContent=selBike.name;
-  document.getElementById('bp-sub').textContent=`${selBike.owner||'Owner'} · ${selBike.bikeType||'Bike'} · ${distanceText} away`;
+  document.getElementById('bp-title').textContent=ownerName;
+  document.getElementById('bp-sub').textContent=`${selBike.name} · ${pickupLabel} · ${distanceText} away`;
   document.getElementById('selected-distance').textContent=distanceText;
-  document.getElementById('selected-distance-sub').textContent=`${openSlots} open slot${openSlots===1?'':'s'} today · ${selBike.bikeType||'Bike'} · ${formatCurrency(selBike.price||0)}/hr`;
+  document.getElementById('selected-distance-sub').textContent=`${openSlots} open slot${openSlots===1?'':'s'} today · ${selBike.bikeType||'Bike'} · ${pickupLabel}`;
   
   document.getElementById('bpb-content').innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;align-items:center;">
+    <div class="detail-grid">
       ${bikeImageMarkup(selBike)}
-      <div class="card-box" style="padding:16px;">
-        <div class="psec">Owner and bike details</div>
-        <div class="sumrow"><span>Owner</span><span>${selBike.owner||'Owner'}</span></div>
-        <div class="sumrow"><span>Bike type</span><span>${selBike.bikeType||'Bike'}</span></div>
-        <div class="sumrow"><span>Availability</span><span>${openSlots} open slot${openSlots===1?'':'s'}</span></div>
-        <div class="sumrow"><span>Distance from you</span><span>${distanceText}</span></div>
-        <div class="sumrow"><span>Registration</span><span>${selBike.regNo||'Shared after verification'}</span></div>
-        <div class="sumrow"><span>Contact</span><span>${contactNumber||'Shown after booking'}</span></div>
+      <div class="detail-card">
+        <div class="detail-card-head">
+          <div class="detail-avatar">${escapeHtml(ownerInitials)}</div>
+          <div>
+            <div class="detail-name">${safeOwnerName}</div>
+            <div class="detail-sub">${safeBikeName} · ${safeBikeType}</div>
+          </div>
+        </div>
+        <div class="detail-table">
+          <div class="detail-row"><div class="detail-label">Contact</div><div class="detail-value">${safeContactNumber}</div></div>
+          <div class="detail-row"><div class="detail-label">Email</div><div class="detail-value soft">${safeOwnerEmail}</div></div>
+          <div class="detail-row"><div class="detail-label">Pickup area</div><div class="detail-value">${safePickupLabel}</div></div>
+          <div class="detail-row"><div class="detail-label">City</div><div class="detail-value soft">${safeOwnerCity}</div></div>
+          <div class="detail-row"><div class="detail-label">Registration</div><div class="detail-value soft">${safeRegNo}</div></div>
+          <div class="detail-row"><div class="detail-label">Open slots</div><div class="detail-value">${openSlots} slot${openSlots===1?'':'s'}</div></div>
+        </div>
       </div>
     </div>
     <div><div class="psec">Real-time rating</div>
       <div class="rt-stars">${avgRating===null?'<span class="rt-count">Not rated yet</span>':`${[1,2,3,4,5].map(i=>`<span class="rt-star${i<=Math.round(avgRating)?' on':''}">★</span>`).join('')}<span class="rt-avg">${avgRating.toFixed(1)}</span><span class="rt-count"> (${revCount} reviews)</span>`}</div>
-      ${lastReview?`<div class="review-txt">"${lastReview.text||'Good ride.'}" — ${lastReview.renterName||'Renter'}, ${lastReview.date||'recently'}</div>`:''}
+      ${lastReview?`<div class="review-txt">"${escapeHtml(lastReview.text||'Good ride.')}" — ${escapeHtml(lastReview.renterName||'Renter')}, ${escapeHtml(lastReview.date||'recently')}</div>`:''}
     </div>
     <div><div class="psec">Bike condition</div><div class="ctagrow">${conds}${warns}</div></div>
-    <div><div class="psec">Location on map</div><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;"><div style="font-size:11px;color:var(--txt2);">📍 ${distanceText} from you · Pin synced with live map</div><button class="workspace-btn" type="button" onclick="toggleMapPanel(true)">Open live map</button></div></div>
+    <div><div class="psec">Location on map</div><div class="location-note"><div>📍</div><div><strong>${safePickupLabel}</strong>${distanceText} from you · Pin synced with the owner&apos;s live listing location.</div></div><div style="margin-top:12px;display:flex;justify-content:flex-end;"><button class="workspace-btn" type="button" onclick="toggleMapPanel(true)">Open live map</button></div></div>
     <div><div class="psec">Pick a time slot</div><div class="slotgrid">${(selBike.slots||[]).map((s,i)=>`<div class="slot${s.taken?' taken':i===selSlot?' on':''}" onclick="${s.taken?'':'appSelSlot('+i+')'}">${s.t}</div>`).join('')}</div></div>
     <div><div class="psec">Pay with</div>
       <div style="display:flex;flex-direction:column;gap:5px;">
@@ -1930,7 +2068,7 @@ window.selectBike=async function(id){
       <div class="sumrow tot"><span>Total</span><span>₹${total}</span></div>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      ${contactNumber?`<button class="lbtnout" type="button" style="flex:1 1 180px;margin:0;" onclick='contactOwner(${JSON.stringify(contactNumber)},${JSON.stringify(selBike.owner||"Owner")})'>Call owner</button>`:''}
+      ${contactNumber?`<button class="lbtnout" type="button" style="flex:1 1 180px;margin:0;" onclick='contactOwner(${JSON.stringify(contactNumber)},${JSON.stringify(ownerName)})'>Call owner</button>`:''}
       ${selBike.avail?`<button class="bookbtn" style="flex:1 1 220px;" onclick="confirmBooking()">Confirm booking · ₹${total}</button>`:'<div style="text-align:center;padding:10px;font-size:12px;color:var(--err);font-weight:600;">⚠ This bike is not available right now</div>'}
     </div>
     <div style="font-size:10px;color:var(--txt3);text-align:center;">Secured by Razorpay · 8% platform fee applied</div>
@@ -2217,7 +2355,7 @@ window.saveSchedule=async function(){
   const minimumDuration=document.getElementById('min-duration-select').value;
   const price=Number(document.getElementById('schedule-price-input').value);
   try{
-    await apiRequest(`/listings/${selectedListingId}`,{method:'PATCH',body:{price,schedule:{days,from,to,minimumDuration}}});
+    await apiRequest(`/listings/${selectedListingId}`,{method:'PATCH',body:{price,schedule:{days,from,to,minimumDuration},...buildCurrentLocationPayload()}});
     toast('Schedule saved!','ok');
   }catch(e){toast(e?.message||'Unable to save the schedule.','fail');}
 };
@@ -2243,7 +2381,7 @@ window.saveListingEdit=async function(){
   const price=Number(document.getElementById('edit-price').value);
   const conditionNotes=document.getElementById('edit-desc').value.trim();
   try{
-    await apiRequest(`/listings/${selectedListingId}`,{method:'PATCH',body:{price,conditionNotes}});
+    await apiRequest(`/listings/${selectedListingId}`,{method:'PATCH',body:{price,conditionNotes,...buildCurrentLocationPayload()}});
     toast('Listing updated!','ok');
     closeModal('modal-edit-listing');
   }catch(e){toast(e?.message||'Unable to update the listing.','fail');}
@@ -2282,11 +2420,19 @@ window.addBikeListing=async function(){
   if(!days.length){toast('Please choose at least one working day','fail');return;}
   let photoUploadId=null;
   try{
+    let locationPayload=buildCurrentLocationPayload();
+    if(!locationPayload.lat||!locationPayload.lng){
+      await requestCurrentCoordinates({recenter:false,timeout:12000});
+      locationPayload=buildCurrentLocationPayload();
+    }
+    if(!locationPayload.lat||!locationPayload.lng){
+      throw new Error('Allow location access before listing your bike so renters see the real pickup spot on the map.');
+    }
     if(photoFile){
       if(photoFile.size>8*1024*1024){throw new Error('Bike photo must be under 8MB.');}
       photoUploadId=(await uploadPrivateFile(photoFile,'listing','bike_photo')).uploadId;
     }
-    await apiRequest('/listings',{method:'POST',body:{bikeType,name,contactNumber,registrationNumber,price,conditionNotes,photoUploadId,schedule:{days,from,to,minimumDuration}}});
+    await apiRequest('/listings',{method:'POST',body:{bikeType,name,contactNumber,registrationNumber,price,conditionNotes,photoUploadId,schedule:{days,from,to,minimumDuration},...locationPayload}});
     toast(`${name} is now live for renters.`,'ok');
     resetListingForm();
   }catch(e){toast(e?.message||'Unable to create the listing.','fail');}
