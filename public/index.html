@@ -1,0 +1,2330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="rideshare-api-base" content="https://3-110-190-230.sslip.io"/>
+<meta name="theme-color" content="#0c3a7a"/>
+<title>RideShare — Smart Campus Mobility</title>
+<link rel="icon" type="image/jpeg" href="assets/rideshare-logo.jpeg"/>
+<link rel="apple-touch-icon" href="assets/rideshare-logo.jpeg"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script>
+if (window.location.hostname === 'bike-rental-mvp-eb787.firebaseapp.com') {
+  window.location.replace(`https://bike-rental-mvp-eb787.web.app${window.location.pathname}${window.location.search}${window.location.hash}`);
+}
+</script>
+<style>
+/* ═══ VARIABLES ═══ */
+:root{
+  --brand:#1565C0;--brand-d:#0D47A1;--brand-s:#E3F2FD;--brand-xs:#EEF6FF;
+  --bg:#f0f4fb;--card:#ffffff;--card2:#f7f9fc;
+  --txt:#0f1923;--txt2:#5a6a7e;--txt3:#9eaaba;
+  --bdr:#e4eaf2;--bdr2:#d0daea;
+  --green:#22c55e;--green-s:#dcfce7;
+  --warn:#f59e0b;--warn-s:#fef3c7;
+  --err:#ef4444;--err-s:#fef2f2;
+  --shadow:0 1px 4px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.05);
+  --shadow-md:0 4px 12px rgba(0,0,0,.1),0 8px 32px rgba(0,0,0,.07);
+  --r:10px;--r-lg:14px;--r-xl:18px;
+  --font:'DM Sans',system-ui,sans-serif;--mono:'DM Mono',monospace;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#0c1220;--card:#151f2e;--card2:#0c1220;--txt:#e8f0f8;--txt2:#7e96b0;--txt3:#4a6080;--bdr:#1e2d40;--bdr2:#1a2738;--brand-s:#0d2240;--brand-xs:#091a33;--shadow:0 1px 4px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.2);}
+}
+
+/* ═══ RESET ═══ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);min-height:100vh;min-height:100dvh;color:var(--txt);overflow-x:hidden;}
+button{font-family:var(--font);}
+
+/* ═══ TOAST ═══ */
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-90px);padding:11px 20px;border-radius:var(--r);font-size:13px;font-weight:500;z-index:9999;pointer-events:none;transition:transform .4s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:var(--shadow-md);}
+#toast.show{transform:translateX(-50%) translateY(0);}
+#toast.ok{background:#064e3b;color:#6ee7b7;}
+#toast.fail{background:#7f1d1d;color:#fca5a5;}
+#toast.info{background:#1e3a5f;color:#93c5fd;}
+
+/* ═══ PAGE SWITCH ═══ */
+#page-login{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#0d1b2e 0%,#0d47a1 100%);}
+#page-app{display:none;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;}
+
+/* ═══════════════════════════════
+   LOGIN
+═══════════════════════════════ */
+.lw{display:flex;width:100%;max-width:980px;min-height:600px;background:var(--card);border-radius:var(--r-xl);overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.35);}
+.llp{width:40%;background:linear-gradient(145deg,#1565C0 0%,#1e3fa1 60%,#0d2d80 100%);padding:44px 40px;display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.llp::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.05);}
+.llp::after{content:'';position:absolute;bottom:-60px;left:-60px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.04);}
+.llp-logo{display:flex;align-items:center;gap:11px;margin-bottom:36px;position:relative;z-index:1;}
+.llp-ic{width:40px;height:40px;border-radius:11px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
+.llp-name{color:#fff;font-size:19px;font-weight:700;letter-spacing:-.3px;}
+.llp-h{color:#fff;font-size:24px;font-weight:700;line-height:1.3;margin-bottom:10px;position:relative;z-index:1;}
+.llp-s{color:rgba(255,255,255,.72);font-size:13px;line-height:1.65;margin-bottom:30px;position:relative;z-index:1;}
+.lfeat{display:flex;gap:13px;margin-bottom:18px;align-items:flex-start;position:relative;z-index:1;}
+.lfic{width:33px;height:33px;border-radius:9px;background:rgba(255,255,255,.13);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.lft{color:#fff;font-size:13px;font-weight:600;margin-bottom:1px;}
+.lfs{color:rgba(255,255,255,.58);font-size:12px;}
+.llp-foot{margin-top:auto;color:rgba(255,255,255,.32);font-size:11px;font-weight:500;position:relative;z-index:1;}
+.lrp{flex:1;background:var(--card);display:flex;align-items:center;justify-content:center;padding:40px 36px;}
+.lcard{width:100%;max-width:330px;}
+.lscreen{display:none;}.lscreen.active{display:block;}
+.lch{font-size:21px;font-weight:700;color:var(--txt);margin-bottom:5px;}
+.lcs{font-size:13px;color:var(--txt2);margin-bottom:22px;line-height:1.5;}
+.llbl{font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:5px;display:block;margin-top:12px;}
+.llbl:first-child{margin-top:0;}
+.linp{width:100%;height:44px;border-radius:var(--r);border:1.5px solid var(--bdr);padding:0 14px;font-size:13px;color:var(--txt);background:var(--card2);outline:none;display:block;transition:border .18s,box-shadow .18s;font-family:var(--font);}
+.linp:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(21,101,192,.11);background:var(--card);}
+.linp::placeholder{color:var(--txt3);}
+.lpww{position:relative;}.lpww .linp{padding-right:42px;}
+.leye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--txt3);display:flex;padding:3px;}
+.lpassrow{display:flex;justify-content:space-between;align-items:center;}
+.lpassrow .llbl{margin:0;}
+.lbtnblue{width:100%;padding:12px;border-radius:var(--r);border:none;background:var(--brand);color:#fff;font-size:13px;font-weight:600;cursor:pointer;display:block;margin-top:14px;transition:background .18s,transform .1s;letter-spacing:.1px;font-family:var(--font);}
+.lbtnblue:hover{background:var(--brand-d);}
+.lbtnblue:active{transform:scale(.98);}
+.lbtnblue:disabled{background:#90afd4;cursor:not-allowed;}
+.lbtnout{width:100%;padding:11px;border-radius:var(--r);border:2px solid var(--brand);background:transparent;color:var(--brand);font-size:13px;font-weight:600;cursor:pointer;display:block;transition:background .18s;font-family:var(--font);}
+.lbtnout:hover{background:var(--brand-s);}
+.lgbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:11px;border-radius:var(--r);border:1.5px solid var(--bdr);background:transparent;color:var(--txt);font-size:13px;font-weight:500;cursor:pointer;margin-bottom:10px;transition:background .18s,border .18s;font-family:var(--font);}
+.lgbtn:hover{background:var(--card2);border-color:var(--bdr2);}
+.lepbtn{width:100%;position:relative;display:flex;align-items:center;justify-content:center;padding:11px;border-radius:var(--r);border:1.5px solid var(--bdr);background:transparent;color:var(--txt);font-size:13px;font-weight:500;cursor:pointer;transition:background .18s;font-family:var(--font);}
+.lepbtn:hover{background:var(--card2);}
+#ep-chev{position:absolute;right:13px;transition:transform .28s;}
+.lslide{overflow:hidden;transition:max-height .3s ease,opacity .22s;max-height:0;opacity:0;}
+.lslide.open{max-height:480px;opacity:1;padding-top:12px;}
+.ldivrow{display:flex;align-items:center;gap:10px;margin:18px 0;}
+.ldl{flex:1;height:1px;background:var(--bdr);}
+.ldt{font-size:11px;color:var(--txt3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.lterms{font-size:11px;color:var(--txt3);text-align:center;margin-top:15px;line-height:1.6;}
+.lterms a{color:var(--brand);text-decoration:none;font-weight:600;}
+.lback{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt2);cursor:pointer;margin-bottom:16px;background:none;border:none;padding:2px 0;font-weight:500;font-family:var(--font);}
+.lback:hover{color:var(--brand);}
+.lprog{display:flex;gap:5px;margin-bottom:18px;}
+.lpd{height:3px;flex:1;border-radius:4px;background:var(--bdr);transition:background .28s;}
+.lpd.on{background:var(--brand);}
+.lotp-row{display:flex;gap:7px;margin-bottom:8px;}
+.lob{flex:1;height:48px;border-radius:var(--r);border:1.5px solid var(--bdr);text-align:center;font-size:20px;font-weight:700;color:var(--brand);background:var(--card2);outline:none;transition:border .18s,box-shadow .18s;font-family:var(--mono);}
+.lob:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(21,101,192,.11);}
+.lob.fi{background:var(--brand-s);border-color:var(--brand);}
+.ltmr{font-size:12px;color:var(--txt3);margin:8px 0 13px;}
+.ltmr span{color:var(--brand);font-weight:600;}
+.lresend{text-align:center;font-size:12px;color:var(--txt2);margin-top:8px;}
+.llnkbtn{background:none;border:none;color:var(--brand);font-size:12px;font-weight:600;cursor:pointer;padding:2px 3px;font-family:var(--font);}
+.lsb-row{display:flex;gap:4px;margin-bottom:5px;}
+.lsb{flex:1;height:3px;border-radius:4px;background:var(--bdr);transition:background .28s;}
+.lsb.w{background:#ef4444;}.lsb.m{background:#f59e0b;}.lsb.s{background:#22c55e;}
+.lpwh{font-size:11px;color:var(--txt3);margin-bottom:12px;}
+.lsucbanner{background:var(--green-s);color:#14532d;padding:10px 13px;border-radius:var(--r);font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.lrole{border-radius:var(--r-lg);padding:14px;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;gap:14px;border:2px solid var(--bdr);background:transparent;transition:border .18s,background .18s;}
+.lrole.sel{border-color:var(--brand);background:var(--brand-s);}
+.lokih{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+.lerr{font-size:12px;color:var(--err);margin-top:7px;min-height:16px;text-align:center;font-weight:500;}
+.lloader{width:20px;height:20px;border:2.5px solid var(--bdr);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;margin:10px auto 0;display:none;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.lhighlight{font-weight:600;color:var(--txt);}
+.lotp-link{text-align:center;margin-top:8px;}
+
+/* ═══════════════════════════════
+   APP — TOPBAR
+═══════════════════════════════ */
+.topbar{background:var(--brand);display:flex;align-items:center;padding:0 18px;height:50px;gap:14px;flex-shrink:0;position:relative;z-index:200;}
+.logo{display:flex;align-items:center;gap:9px;}
+.logo-ic{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;}
+.logo-txt{color:#fff;font-size:15px;font-weight:700;letter-spacing:-.2px;}
+.tsearch{flex:1;max-width:300px;background:rgba(255,255,255,.13);border-radius:7px;display:flex;align-items:center;padding:0 10px;gap:7px;height:32px;border:1px solid rgba(255,255,255,.1);transition:background .18s;}
+.tsearch:focus-within{background:rgba(255,255,255,.2);}
+.tsearch input{background:none;border:none;outline:none;color:#fff;font-size:13px;width:100%;font-family:var(--font);}
+.tsearch input::placeholder{color:rgba(255,255,255,.55);}
+.tright{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.tlocation{display:flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(255,255,255,.12);border-radius:6px;cursor:pointer;border:1px solid rgba(255,255,255,.1);}
+.tlocation-dot{width:7px;height:7px;border-radius:50%;background:#69F0AE;flex-shrink:0;animation:pulse-dot 2s infinite;}
+@keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 rgba(105,240,174,.4);}50%{box-shadow:0 0 0 4px rgba(105,240,174,0);}}
+.tlocation span{color:rgba(255,255,255,.9);font-size:12px;font-weight:500;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rtoggle{display:flex;background:rgba(255,255,255,.12);border-radius:7px;overflow:hidden;border:1px solid rgba(255,255,255,.1);}
+.rbtn{padding:5px 13px;font-size:12px;color:rgba(255,255,255,.65);cursor:pointer;border:none;background:none;font-family:var(--font);font-weight:500;transition:all .18s;}
+.rbtn.on{background:rgba(255,255,255,.22);color:#fff;}
+.tavatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;cursor:pointer;position:relative;overflow:visible;flex-shrink:0;border:2px solid rgba(255,255,255,.25);}
+.tavatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.avatar-menu{position:absolute;top:calc(100% + 12px);right:-6px;background:var(--card);border-radius:var(--r-lg);border:1px solid var(--bdr);box-shadow:var(--shadow-md);min-width:220px;z-index:900;display:none;overflow:hidden;}
+.avatar-menu.show{display:block;}
+.avatar-menu-header{padding:14px 14px 10px;border-bottom:1px solid var(--bdr);}
+.amh-name{font-size:13px;font-weight:700;color:var(--txt);}
+.amh-email{font-size:11px;color:var(--txt2);margin-top:1px;}
+.avatar-menu button{width:100%;padding:9px 14px;text-align:left;background:none;border:none;font-size:12px;font-weight:500;color:var(--txt);cursor:pointer;display:flex;align-items:center;gap:9px;font-family:var(--font);}
+.avatar-menu button:hover{background:var(--card2);}
+.avatar-menu button.danger{color:var(--err);}
+
+/* ═══ APP BODY ═══ */
+.abody{display:flex;flex:1;overflow:hidden;}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar{width:210px;background:#0c3a7a;display:flex;flex-direction:column;padding:10px 0;flex-shrink:0;border-right:1px solid rgba(255,255,255,.06);}
+.nav-sec{padding:10px 15px 3px;font-size:9px;color:rgba(255,255,255,.3);letter-spacing:.08em;text-transform:uppercase;font-weight:600;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 15px;color:rgba(255,255,255,.58);font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;border-left:3px solid transparent;margin:1px 0;}
+.nav-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85);}
+.nav-item.on{background:rgba(255,255,255,.12);color:#fff;border-left-color:#90CAF9;}
+.nav-item svg{flex-shrink:0;opacity:.75;}
+.nav-item.on svg{opacity:1;}
+.sidebar-foot{margin-top:auto;padding:14px 15px;border-top:1px solid rgba(255,255,255,.08);}
+.sf-user{display:flex;align-items:center;gap:9px;}
+.sf-avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0;overflow:hidden;border:2px solid rgba(255,255,255,.2);}
+.sf-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.sf-name{color:#fff;font-size:12px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sf-badge{display:flex;align-items:center;gap:3px;margin-top:2px;font-size:10px;color:#69F0AE;font-weight:600;}
+
+/* ═══ MAIN ═══ */
+.amain{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.mhdr{padding:13px 18px 10px;background:var(--card);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.mhdr-l .ptitle{font-size:14px;font-weight:700;color:var(--txt);}
+.mhdr-l .psub{font-size:11px;color:var(--txt2);margin-top:1px;}
+.frow{display:flex;gap:6px;}
+.fchip{padding:4px 11px;border-radius:20px;font-size:11px;font-weight:500;border:1.5px solid var(--bdr);color:var(--txt2);background:var(--card);cursor:pointer;transition:all .15s;}
+.fchip.on{background:var(--brand-s);color:var(--brand);border-color:#85B7EB;}
+.view{display:none;flex:1;overflow:hidden;min-width:0;}
+.view.active{display:flex;}
+.view-inner{flex:1;overflow-y:auto;padding:18px 20px;}
+
+/* ═══ BROWSE — 3 PANEL ═══ */
+.bike-col{width:260px;display:flex;flex-direction:column;gap:0;overflow-y:auto;border-right:1px solid var(--bdr);background:var(--card);flex-shrink:0;}
+.bike-col-header{padding:12px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.bc-title{font-size:12px;font-weight:700;color:var(--txt);}
+.bc-count{font-size:11px;color:var(--txt2);}
+.bcard{border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .15s;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;}
+.bcard:hover{background:var(--card2);}
+.bcard.sel{background:var(--brand-xs);border-left:3px solid var(--brand);}
+.bcard-img{width:52px;height:38px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.bcard-info{flex:1;min-width:0;}
+.bc-name{font-size:12px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bc-owner{font-size:11px;color:var(--txt2);margin-top:1px;}
+.bc-footer{display:flex;align-items:center;justify-content:space-between;margin-top:5px;}
+.bc-price{font-size:13px;font-weight:700;color:var(--brand);}
+.bc-stars{display:flex;align-items:center;gap:2px;}
+.bc-star{font-size:10px;color:#F57F17;}
+.bc-rat{font-size:10px;color:var(--txt2);}
+.bc-badge{font-size:9px;font-weight:600;padding:2px 6px;border-radius:6px;margin-top:3px;display:inline-block;}
+.bc-badge.free{background:var(--green-s);color:#166534;}
+.bc-badge.busy{background:var(--err-s);color:#991b1b;}
+
+/* ═══ MAP ═══ */
+#map-container{flex:1;position:relative;min-width:0;}
+#map{width:100%;height:100%;}
+.map-overlay-btn{position:absolute;z-index:500;background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;box-shadow:var(--shadow);display:flex;align-items:center;gap:6px;color:var(--txt);font-family:var(--font);}
+.map-locate-btn{top:12px;left:12px;}
+.map-stats-bar{position:absolute;bottom:0;left:0;right:0;z-index:400;background:rgba(255,255,255,.95);backdrop-filter:blur(8px);padding:10px 16px;display:flex;gap:20px;border-top:1px solid var(--bdr);}
+@media(prefers-color-scheme:dark){.map-stats-bar{background:rgba(21,31,46,.95);}}
+.msb-item{text-align:center;}
+.msb-val{font-size:16px;font-weight:700;color:var(--brand);}
+.msb-lbl{font-size:10px;color:var(--txt2);font-weight:500;}
+.leaflet-popup-content-wrapper{border-radius:var(--r)!important;box-shadow:var(--shadow-md)!important;border:1px solid var(--bdr)!important;font-family:var(--font)!important;}
+.bike-popup{font-size:12px;color:var(--txt);}
+.bike-popup strong{font-size:13px;font-weight:700;display:block;margin-bottom:4px;}
+.bike-popup .popup-price{color:var(--brand);font-weight:700;font-size:14px;}
+.popup-select-btn{background:var(--brand);color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;width:100%;margin-top:8px;font-family:var(--font);}
+
+/* ═══ BOOKING PANEL ═══ */
+.bpanel{width:270px;background:var(--card);border-left:1px solid var(--bdr);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
+.bph{background:linear-gradient(135deg,var(--brand),var(--brand-d));padding:14px 15px;}
+.bph-t{color:#fff;font-size:13px;font-weight:700;}
+.bph-s{color:rgba(255,255,255,.75);font-size:11px;margin-top:2px;}
+.bpb{flex:1;padding:13px 14px;display:flex;flex-direction:column;gap:13px;overflow-y:auto;}
+.psec{font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;}
+.ctag{font-size:11px;padding:3px 8px;border-radius:6px;background:var(--brand-s);color:#0C447C;font-weight:500;}
+.ctag.warn{background:var(--warn-s);color:#7B5800;}
+.ctag.err{background:var(--err-s);color:#991b1b;}
+.ctagrow{display:flex;gap:5px;flex-wrap:wrap;}
+.review-txt{font-size:11px;color:var(--txt2);line-height:1.5;margin-top:5px;font-style:italic;}
+.rt-stars{display:flex;align-items:center;gap:3px;margin-bottom:4px;}
+.rt-star{font-size:14px;color:#e5e7eb;}
+.rt-star.on{color:#F57F17;}
+.rt-avg{font-size:16px;font-weight:700;color:var(--txt);margin-left:4px;}
+.rt-count{font-size:11px;color:var(--txt2);}
+.slotgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.slot{padding:7px 5px;border-radius:7px;font-size:11px;text-align:center;border:1.5px solid var(--bdr);color:var(--txt2);cursor:pointer;transition:all .15s;font-weight:500;}
+.slot.on{background:var(--brand-s);color:var(--brand);border-color:#85B7EB;font-weight:600;}
+.slot.taken{background:var(--card2);color:var(--txt3);text-decoration:line-through;cursor:not-allowed;}
+.payopt{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r);border:1.5px solid var(--bdr);cursor:pointer;transition:all .15s;}
+.payopt.on{border-color:var(--brand);background:var(--brand-s);}
+.payopt:hover:not(.on){border-color:var(--bdr2);}
+.payic{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+.paylbl{font-size:12px;color:var(--txt);font-weight:500;}
+.sumrow{display:flex;justify-content:space-between;font-size:12px;color:var(--txt2);padding:2px 0;}
+.sumrow.tot{font-weight:700;color:var(--txt);border-top:1px solid var(--bdr);padding-top:7px;margin-top:2px;font-size:13px;}
+.bookbtn{background:var(--brand);color:#fff;border:none;border-radius:var(--r);padding:11px;font-size:13px;font-weight:700;cursor:pointer;text-align:center;width:100%;transition:background .18s;font-family:var(--font);}
+.bookbtn:hover{background:var(--brand-d);}
+
+/* ═══ SECTIONS ═══ */
+.section-head{font-size:12px;font-weight:700;color:var(--txt);margin-bottom:10px;margin-top:18px;text-transform:uppercase;letter-spacing:.04em;}
+.section-head:first-child{margin-top:0;}
+.card-box{background:var(--card);border-radius:var(--r-lg);border:1px solid var(--bdr);padding:16px;margin-bottom:12px;}
+
+/* ═══ BOOKINGS ═══ */
+.bk-card{background:var(--card);border-radius:var(--r-lg);border:1px solid var(--bdr);padding:14px;margin-bottom:10px;display:flex;gap:13px;}
+.bk-ic{width:44px;height:44px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.bk-info{flex:1;min-width:0;}
+.bk-name{font-size:13px;font-weight:700;color:var(--txt);}
+.bk-meta{font-size:11px;color:var(--txt2);margin-top:2px;line-height:1.5;}
+.bk-status{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;margin-top:5px;}
+.bk-status.active{background:var(--green-s);color:#166534;}
+.bk-status.upcoming{background:var(--brand-s);color:#0C447C;}
+.bk-status.done{background:var(--card2);color:var(--txt2);}
+.bk-status.cancelled{background:var(--err-s);color:#991b1b;}
+.bk-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.bk-btn{padding:5px 11px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:var(--font);transition:opacity .15s;}
+.bk-btn:hover{opacity:.85;}
+.bk-btn.prim{background:var(--brand);color:#fff;}
+.bk-btn.ghost{background:var(--card2);color:var(--txt);border:1px solid var(--bdr);}
+.bk-btn.danger{background:var(--err-s);color:var(--err);}
+.bk-btn.warn{background:var(--warn-s);color:#92400E;}
+
+/* ═══ KYC ═══ */
+.kyc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.kyc-card{background:var(--card);border-radius:var(--r-lg);border:1px solid var(--bdr);padding:15px;}
+.kyc-icon{width:38px;height:38px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
+.kyc-title{font-size:12px;font-weight:700;color:var(--txt);margin-bottom:2px;}
+.kyc-sub{font-size:11px;color:var(--txt2);}
+.kyc-status{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:3px 7px;border-radius:6px;margin-top:6px;}
+.kyc-status.done{background:var(--green-s);color:#166534;}
+.kyc-status.pend{background:var(--warn-s);color:#92400E;}
+.kyc-status.req{background:var(--err-s);color:#991b1b;}
+.kyc-upload-area{margin-top:10px;border:1.5px dashed var(--bdr2);border-radius:var(--r);padding:12px;text-align:center;cursor:pointer;transition:all .18s;position:relative;}
+.kyc-upload-area:hover{border-color:var(--brand);background:var(--brand-xs);}
+.kyc-upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.kyc-upload-txt{font-size:11px;color:var(--txt2);font-weight:500;}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--bdr);}
+.toggle-row:last-child{border:none;}
+.toggle-label{font-size:13px;font-weight:500;color:var(--txt);}
+.toggle-sub{font-size:11px;color:var(--txt2);margin-top:1px;}
+.tswitch{position:relative;width:40px;height:22px;cursor:pointer;flex-shrink:0;}
+.tswitch input{opacity:0;width:0;height:0;}
+.tslider{position:absolute;inset:0;background:#ccc;border-radius:22px;transition:background .2s;}
+.tslider::before{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.tswitch input:checked+.tslider{background:var(--brand);}
+.tswitch input:checked+.tslider::before{transform:translateX(18px);}
+
+/* ═══ DAMAGE ═══ */
+.dmg-steps{display:flex;gap:0;margin-bottom:20px;}
+.dmg-step{flex:1;text-align:center;position:relative;}
+.dmg-step:not(:last-child)::after{content:'';position:absolute;top:15px;left:50%;width:100%;height:2px;background:var(--bdr);z-index:0;}
+.dmg-step.done::after{background:var(--brand);}
+.dmg-num{width:30px;height:30px;border-radius:50%;background:var(--card2);border:2px solid var(--bdr);color:var(--txt2);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 5px;position:relative;z-index:1;}
+.dmg-step.done .dmg-num{background:var(--brand);color:#fff;border-color:var(--brand);}
+.dmg-step.active .dmg-num{background:var(--brand-s);color:var(--brand);border-color:var(--brand);}
+.dmg-lbl{font-size:10px;color:var(--txt2);font-weight:500;}
+.dmg-step.done .dmg-lbl,.dmg-step.active .dmg-lbl{color:var(--brand);}
+.photo-drop{border:2px dashed var(--bdr2);border-radius:var(--r-lg);padding:24px;text-align:center;cursor:pointer;transition:all .18s;position:relative;margin-bottom:12px;}
+.photo-drop:hover{border-color:var(--brand);background:var(--brand-xs);}
+.photo-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.photo-preview{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+.photo-thumb-wrap{position:relative;}
+.photo-thumb{width:80px;height:60px;border-radius:var(--r);object-fit:cover;border:1px solid var(--bdr);display:block;}
+.photo-thumb-remove{position:absolute;top:-7px;right:-7px;width:24px;height:24px;border:none;border-radius:50%;background:rgba(15,23,42,.88);color:#fff;font-size:15px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);}
+.sev-opts{display:flex;gap:8px;margin-bottom:14px;}
+.sev-opt{flex:1;padding:9px 6px;border-radius:var(--r);border:1.5px solid var(--bdr);text-align:center;cursor:pointer;font-size:11px;font-weight:600;transition:all .15s;}
+.sev-opt.on{border-color:var(--brand);background:var(--brand-s);color:var(--brand);}
+.sev-opt.won{border-color:var(--warn);background:var(--warn-s);color:#92400E;}
+.sev-opt.eon{border-color:var(--err);background:var(--err-s);color:var(--err);}
+
+/* ═══ LISTINGS ═══ */
+.list-card{background:var(--card);border-radius:var(--r-lg);border:1px solid var(--bdr);padding:14px;margin-bottom:10px;display:flex;gap:13px;align-items:center;}
+.list-img{width:54px;height:38px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.list-info{flex:1;min-width:0;}
+.list-name{font-size:13px;font-weight:700;color:var(--txt);}
+.list-meta{font-size:11px;color:var(--txt2);margin-top:2px;}
+.list-actions{display:flex;gap:5px;}
+.list-btn{padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:var(--font);}
+.list-btn.edit{background:var(--brand-s);color:var(--brand);}
+.list-btn.del{background:var(--err-s);color:var(--err);}
+.add-bike-btn{width:100%;padding:12px;border-radius:var(--r-lg);border:2px dashed var(--bdr2);background:transparent;color:var(--brand);font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;transition:all .18s;font-family:var(--font);}
+.add-bike-btn:hover{border-color:var(--brand);background:var(--brand-xs);}
+.day-grid{display:flex;gap:6px;margin:10px 0;}
+.day-btn{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--bdr);background:transparent;color:var(--txt2);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;}
+.day-btn.on{background:var(--brand);color:#fff;border-color:var(--brand);}
+
+/* ═══ EARNINGS ═══ */
+.earn-hero{background:linear-gradient(135deg,var(--brand) 0%,#1e40af 100%);border-radius:var(--r-xl);padding:20px;color:#fff;margin-bottom:14px;position:relative;overflow:hidden;}
+.earn-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.06);}
+.earn-total-lbl{font-size:12px;color:rgba(255,255,255,.7);font-weight:500;}
+.earn-total{font-size:30px;font-weight:800;margin-top:3px;letter-spacing:-.5px;}
+.earn-sub{font-size:11px;color:rgba(255,255,255,.62);margin-top:3px;}
+.earn-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px;}
+.earn-mini{background:rgba(255,255,255,.13);border-radius:var(--r);padding:10px;}
+.earn-mini-lbl{font-size:10px;color:rgba(255,255,255,.65);}
+.earn-mini-val{font-size:15px;font-weight:700;margin-top:2px;}
+.txn-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--bdr);}
+.txn-row:last-child{border:none;}
+.txn-ic{width:36px;height:36px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.txn-info{flex:1;min-width:0;}
+.txn-name{font-size:12px;font-weight:600;color:var(--txt);}
+.txn-date{font-size:10px;color:var(--txt2);margin-top:1px;}
+.txn-amt{font-size:13px;font-weight:700;}
+.txn-amt.cr{color:var(--green);}
+.txn-amt.db{color:var(--err);}
+
+/* ═══ MODALS ═══ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:800;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--card);border-radius:var(--r-xl);padding:24px;max-width:440px;width:90%;box-shadow:0 24px 80px rgba(0,0,0,.25);border:1px solid var(--bdr);max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:700;color:var(--txt);margin-bottom:5px;}
+.modal-sub{font-size:13px;color:var(--txt2);margin-bottom:18px;line-height:1.5;}
+.modal-actions{display:flex;gap:9px;margin-top:18px;}
+.mbtn{flex:1;padding:10px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:opacity .15s;font-family:var(--font);}
+.mbtn:hover{opacity:.88;}
+.mbtn.primary{background:var(--brand);color:#fff;}
+.mbtn.ghost{background:var(--card2);color:var(--txt);border:1px solid var(--bdr);}
+.mbtn.danger{background:var(--err);color:#fff;}
+.minp{width:100%;height:40px;border-radius:var(--r);border:1.5px solid var(--bdr);padding:0 12px;font-size:13px;color:var(--txt);background:var(--card2);outline:none;margin-bottom:10px;font-family:var(--font);transition:border .18s;}
+.minp:focus{border-color:var(--brand);}
+.mselect{width:100%;height:40px;border-radius:var(--r);border:1.5px solid var(--bdr);padding:0 12px;font-size:13px;color:var(--txt);background:var(--card2);outline:none;margin-bottom:10px;cursor:pointer;font-family:var(--font);}
+.mtarea{width:100%;border-radius:var(--r);border:1.5px solid var(--bdr);padding:10px 12px;font-size:13px;color:var(--txt);background:var(--card2);outline:none;resize:none;font-family:var(--font);line-height:1.5;}
+.mstar{font-size:26px;cursor:pointer;color:var(--bdr2);transition:color .12s;}
+.mstar.lit{color:#F57F17;}
+
+/* ═══ PROFILE MODAL ═══ */
+.profile-pic-area{text-align:center;margin-bottom:18px;}
+.profile-pic-circle{width:76px;height:76px;border-radius:50%;margin:0 auto 10px;position:relative;cursor:pointer;overflow:hidden;border:3px solid var(--brand-s);}
+.profile-pic-circle img,.ppc-initials{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.ppc-initials{display:flex;align-items:center;justify-content:center;background:var(--brand);color:#fff;font-size:24px;font-weight:700;}
+.ppc-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;border-radius:50%;}
+.profile-pic-circle:hover .ppc-overlay{display:flex;}
+.profile-pic-circle input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+
+/* ═══ MISC ═══ */
+.inp-group{margin-bottom:12px;}
+.inp-label{font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:5px;display:block;}
+.info-panel{background:var(--warn-s);border-radius:var(--r);padding:12px 14px;font-size:12px;color:#92400E;line-height:1.6;border:1px solid rgba(245,158,11,.2);}
+.success-panel{background:var(--green-s);border-radius:var(--r);padding:12px 14px;font-size:12px;color:#166534;line-height:1.6;border:1px solid rgba(34,197,94,.2);}
+.razorpay-note{background:var(--brand-s);border-radius:var(--r);padding:12px 14px;font-size:12px;color:#0C447C;line-height:1.6;border:1px solid rgba(21,101,192,.15);}
+
+@media(max-width:900px){.lw{flex-direction:column;max-width:480px;min-height:auto;}.llp{width:100%;padding:28px;}.lrp{padding:28px 20px;}.bpanel{width:240px;}.bike-col{width:220px;}}
+@media(max-width:700px){.bpanel{position:fixed;bottom:0;left:0;right:0;z-index:100;border-radius:var(--r-xl) var(--r-xl) 0 0;max-height:65vh;width:100%;}.bike-col{width:100%;border-right:none;}.kyc-grid{grid-template-columns:1fr;}.earn-grid{grid-template-columns:1fr 1fr;}}
+
+/* ═══ OVERRIDES: LIVE DASHBOARD REDESIGN ═══ */
+.brand-mark{width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit;}
+.llp-ic{width:58px;height:58px;background:linear-gradient(135deg,rgba(255,255,255,.2),rgba(255,255,255,.06));padding:4px;box-shadow:0 10px 30px rgba(0,0,0,.18);backdrop-filter:blur(10px);}
+.logo-ic{width:42px;height:42px;background:rgba(255,255,255,.14);padding:3px;box-shadow:0 12px 24px rgba(0,0,0,.16);backdrop-filter:blur(8px);}
+.avatar-media{width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:50%;}
+
+.browse-shell{display:grid;grid-template-columns:minmax(280px,320px) minmax(0,1fr) auto;gap:18px;padding:18px;flex:1;min-height:0;overflow:hidden;background:linear-gradient(180deg,var(--bg) 0%,var(--card2) 100%);}
+.bike-col-upgraded{width:auto;border:1px solid var(--bdr);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;}
+.browse-main{display:flex;flex-direction:column;gap:16px;min-width:0;overflow:hidden;}
+.browse-toolbar{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:20px 22px;border:1px solid var(--bdr);border-radius:20px;background:linear-gradient(145deg,var(--card) 0%,var(--card2) 100%);box-shadow:var(--shadow);}
+.browse-kicker{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--brand);}
+.browse-lead{margin-top:7px;font-size:13px;line-height:1.7;color:var(--txt2);max-width:760px;}
+.browse-toolbar-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
+.workspace-btn{height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--bdr);background:var(--card);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);box-shadow:var(--shadow);}
+.workspace-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;}
+.metric-card{padding:16px;border:1px solid var(--bdr);border-radius:18px;background:var(--card);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;min-width:0;}
+.metric-card.accent{background:linear-gradient(145deg,var(--brand-xs),var(--card));}
+.metric-label{font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.08em;}
+.metric-value{font-size:24px;font-weight:700;color:var(--txt);line-height:1.1;}
+.metric-sub{font-size:11px;line-height:1.5;color:var(--txt2);}
+.booking-stage{display:flex;flex-direction:column;min-height:0;flex:1;border:1px solid var(--bdr);border-radius:24px;background:var(--card);box-shadow:var(--shadow);overflow:hidden;}
+.booking-stage-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:22px;border-bottom:1px solid var(--bdr);background:linear-gradient(135deg,var(--brand-xs),transparent);}
+.booking-stage-kicker{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--brand);}
+.booking-stage-title{margin-top:6px;font-size:26px;font-weight:700;letter-spacing:-.03em;color:var(--txt);}
+.booking-stage-sub{max-width:340px;font-size:12px;line-height:1.7;color:var(--txt2);}
+.booking-stage-body{padding:22px;gap:20px;}
+.empty-booking-state{padding:46px 12px;text-align:center;max-width:520px;margin:auto;}
+.empty-booking-icon{font-size:44px;margin-bottom:12px;}
+.empty-booking-title{font-size:20px;font-weight:700;color:var(--txt);}
+.empty-booking-copy{margin-top:8px;font-size:13px;line-height:1.8;color:var(--txt2);}
+.slotgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+.slot{padding:14px 10px;border-radius:12px;font-size:12px;font-weight:700;}
+.map-dock{width:92px;display:flex;flex-direction:column;gap:0;border:1px solid var(--bdr);border-radius:20px;background:var(--card);box-shadow:var(--shadow);overflow:hidden;transition:width .25s ease;}
+.map-dock.expanded{width:min(34vw,440px);}
+.map-dock-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px;border-bottom:1px solid var(--bdr);}
+.map-dock-title{font-size:14px;font-weight:700;color:var(--txt);}
+.map-dock-sub{font-size:11px;color:var(--txt2);}
+.map-dock-actions{display:flex;gap:8px;}
+.map-icon-btn{width:34px;height:34px;border-radius:10px;border:1px solid var(--bdr);background:var(--card2);color:var(--txt);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.map-dock-body{flex:1;min-height:0;position:relative;}
+#map-container #map{width:100%;height:100%;min-height:580px;}
+.map-dock.collapsed .map-dock-title,.map-dock.collapsed .map-dock-sub{display:none;}
+.map-dock.collapsed .map-dock-head{padding:12px;justify-content:center;}
+.map-dock.collapsed .map-dock-actions{flex-direction:column;}
+.map-dock.collapsed .map-dock-body{display:none;}
+.owner-view{padding-bottom:28px;}
+.owner-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);gap:18px;align-items:start;}
+.owner-column{min-width:0;}
+.owner-form-card{padding:20px 20px 22px;}
+.owner-form-head{margin-bottom:16px;}
+.owner-form-title{font-size:22px;font-weight:700;color:var(--txt);}
+.owner-form-copy{margin-top:7px;font-size:12px;line-height:1.7;color:var(--txt2);}
+.owner-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.listing-photo-drop{display:flex;align-items:center;justify-content:center;min-height:122px;border:1.5px dashed var(--bdr2);border-radius:16px;background:var(--card2);cursor:pointer;padding:18px;text-align:center;}
+.listing-photo-drop input{display:none;}
+.listing-photo-copy{font-size:12px;line-height:1.7;color:var(--txt2);}
+.upload-file-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--bdr);border-radius:14px;background:var(--card2);margin-top:10px;}
+.upload-file-card[hidden]{display:none!important;}
+.upload-file-thumb{width:64px;height:48px;border-radius:12px;object-fit:cover;border:1px solid var(--bdr);background:var(--card);}
+.upload-file-meta{flex:1;min-width:0;}
+.upload-file-name{font-size:12px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.upload-file-sub{font-size:11px;color:var(--txt2);margin-top:3px;}
+.upload-file-remove{border:none;background:transparent;color:var(--err);font-size:11px;font-weight:700;cursor:pointer;padding:0;}
+.day-grid.day-grid-form{flex-wrap:wrap;margin-top:6px;}
+.day-grid.day-grid-form .day-btn{width:auto;min-width:42px;padding:0 10px;border-radius:999px;}
+.list-card{align-items:center;}
+.list-thumb,.bcard-photo{object-fit:cover;display:block;background:var(--card2);border:1px solid var(--bdr);}
+.list-thumb{width:92px;height:64px;border-radius:14px;}
+.list-thumb.placeholder{display:flex;align-items:center;justify-content:center;padding:8px;}
+.bcard-photo{width:52px;height:38px;border-radius:10px;}
+.bcard-photo.placeholder{display:flex;align-items:center;justify-content:center;padding:4px;border:none;}
+.profile-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+.profile-action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+.ghost-link-btn{padding:10px 14px;border-radius:12px;border:1px solid var(--bdr);background:var(--card2);color:var(--txt);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);}
+
+@media(max-width:1180px){
+  .browse-shell{grid-template-columns:minmax(250px,300px) minmax(0,1fr);}
+  .map-dock{position:fixed;right:18px;top:86px;bottom:18px;z-index:500;width:92px;}
+  .map-dock.expanded{width:min(60vw,440px);}
+  .workspace-metrics{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .owner-grid{grid-template-columns:1fr;}
+}
+
+@media(max-width:860px){
+  body{font-size:15px;}
+  #page-app{height:auto;min-height:100dvh;overflow-y:auto;}
+  .topbar{height:auto;padding:14px;display:flex;flex-direction:column;align-items:stretch;gap:12px;overflow:visible;}
+  .logo{min-width:0;display:flex;align-items:center;justify-content:flex-start;}
+  .logo-txt{font-size:clamp(1.55rem,5vw,1.8rem);}
+  .tsearch{order:3;flex:none;max-width:none;width:100%;height:46px;border-radius:14px;padding:0 14px;}
+  .tsearch input{font-size:15px;}
+  .tright{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;}
+  .rtoggle{grid-column:1 / -1;width:100%;display:grid;grid-template-columns:1fr 1fr;}
+  .rbtn{flex:1;}
+  .tlocation{grid-column:1 / 2;min-width:0;height:44px;border-radius:14px;padding:0 14px;}
+  .tlocation span{max-width:none;font-size:14px;}
+  .tavatar{grid-column:2 / 3;justify-self:end;width:44px;height:44px;}
+  .abody{display:block;overflow:visible;min-height:0;}
+  .sidebar{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;height:76px;display:flex;flex-direction:row;align-items:stretch;justify-content:space-between;padding:8px 10px;background:rgba(12,58,122,.98);backdrop-filter:blur(14px);z-index:650;border-right:none;border-top:1px solid rgba(255,255,255,.08);}
+  .nav-sec,.sidebar-foot{display:none;}
+  .nav-item{flex:1;flex-direction:column;justify-content:center;gap:4px;padding:6px 4px;margin:0;border-left:none;border-top:3px solid transparent;border-radius:12px;font-size:10px;text-align:center;}
+  .nav-item.on{border-left-color:transparent;border-top-color:#90CAF9;}
+  .amain{overflow:visible;min-height:0;padding-bottom:calc(132px + env(safe-area-inset-bottom));}
+  .mhdr{padding:12px 14px;align-items:flex-start;gap:10px;}
+  .mhdr-l .ptitle{font-size:clamp(1.75rem,6vw,2.2rem);line-height:1.05;}
+  .mhdr-l .psub{font-size:clamp(.98rem,3.8vw,1.05rem);line-height:1.35;}
+  .frow{width:100%;overflow-x:auto;gap:10px;padding-bottom:2px;}
+  .fchip{flex:0 0 auto;font-size:14px;padding:10px 16px;border-radius:18px;}
+  .view{display:none;flex:none;overflow:visible;min-height:0;}
+  .view.active{display:block;overflow:visible;}
+  .view-inner{padding:16px 14px calc(190px + env(safe-area-inset-bottom));overflow:visible;}
+  .browse-shell{display:flex;flex-direction:column;overflow:visible;}
+  .browse-toolbar,.booking-stage-head{flex-direction:column;}
+  .browse-toolbar{padding:18px;}
+  .browse-kicker{font-size:12px;}
+  .browse-lead{font-size:15px;line-height:1.6;}
+  .booking-stage-head,.booking-stage-body{padding:18px;}
+  .booking-stage-title{font-size:clamp(1.5rem,5.6vw,1.8rem);}
+  .booking-stage-sub{font-size:14px;max-width:none;}
+  .section-head{font-size:13px;letter-spacing:.08em;}
+  .workspace-metrics{grid-template-columns:1fr;}
+  .metric-value{font-size:clamp(2rem,8vw,2.5rem);}
+  .metric-sub,.metric-label{font-size:12px;}
+  .profile-form-grid,.owner-form-grid{grid-template-columns:1fr;}
+  .slotgrid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .bike-col-upgraded,.browse-main,.booking-stage,.booking-stage-body{overflow:visible;}
+  .booking-stage{min-height:auto;}
+  .map-dock{position:relative;right:auto;top:auto;bottom:auto;width:100%;}
+  .map-dock.collapsed{width:100%;}
+  .map-dock.collapsed .map-dock-title,.map-dock.collapsed .map-dock-sub{display:block;}
+  .map-dock.collapsed .map-dock-actions{flex-direction:row;}
+  .map-dock.collapsed .map-dock-body{display:none;}
+  #map-container #map{min-height:300px;}
+  .avatar-menu{right:0;top:calc(100% + 10px);}
+  .list-card{align-items:flex-start;flex-wrap:wrap;}
+  .list-actions{width:100%;justify-content:flex-end;}
+  .day-grid{flex-wrap:wrap;}
+}
+
+@media(max-width:520px){
+  .logo-ic{width:56px;height:56px;border-radius:16px;}
+  .workspace-btn{width:100%;justify-content:center;}
+  .browse-toolbar-actions{width:100%;}
+  .browse-toolbar-actions .workspace-btn{flex:1 1 100%;}
+  .sumrow,.toggle-row{gap:10px;}
+  .earn-grid{grid-template-columns:1fr;}
+  .card-box{padding:14px;}
+}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- ════════════════════════ LOGIN PAGE ════════════════════════ -->
+<div id="page-login">
+<div class="lw">
+  <div class="llp">
+    <div class="llp-logo">
+      <div class="llp-ic"><img class="brand-mark" src="assets/rideshare-logo.jpeg" alt="RideShare logo"/></div>
+      <span class="llp-name">RideShare</span>
+    </div>
+    <div class="llp-h">Rent nearby bikes.<br/>Earn from yours.</div>
+    <div class="llp-s">Campus-first shared mobility — rent, list, earn. Smart, affordable, verified.</div>
+    <div class="lfeat"><div class="lfic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#fff"/></svg></div><div><div class="lft">Live map — bikes within 1 km</div><div class="lfs">Real-time locations on interactive map</div></div></div>
+    <div class="lfeat"><div class="lfic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" fill="#fff"/></svg></div><div><div class="lft">KYC verified &amp; insured</div><div class="lfs">Aadhaar, licence &amp; selfie verified</div></div></div>
+    <div class="lfeat"><div class="lfic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div><div><div class="lft">Razorpay — instant earnings</div><div class="lfs">Auto-split payments, 8% platform fee</div></div></div>
+    <div class="lfeat"><div class="lfic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="#fff" stroke-width="2"/><path d="M2 10h20" stroke="#fff" stroke-width="2"/></svg></div><div><div class="lft">GPay, card or cash</div><div class="lfs">Multiple payment options at checkout</div></div></div>
+    <div class="llp-foot">Crescent Institute · Chennai · 8% platform fee only</div>
+  </div>
+  <div class="lrp"><div class="lcard">
+    <!-- S1 -->
+    <div id="ls-land" class="lscreen active">
+      <div class="lch">Welcome back</div><div class="lcs">Sign in to RideShare</div>
+      <button class="lgbtn" id="btn-google"><svg width="17" height="17" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>Continue with Google</button>
+      <button class="lepbtn" id="ep-toggle"><span id="ep-label">Email or Phone Number</span><svg id="ep-chev" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      <div class="lslide" id="ep-fields">
+        <span class="llbl">Email address</span>
+        <input class="linp" id="cred-inp" type="email" placeholder="name@example.com" autocomplete="email"/>
+        <div class="lpassrow" style="margin-top:10px;"><span class="llbl">Password</span><button class="llnkbtn" id="btn-forgot-lnk">Forgot?</button></div>
+        <div class="lpww"><input class="linp" id="pass-inp" type="password" placeholder="••••••••" autocomplete="current-password"/><button class="leye" id="eye-main"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+        <button class="lbtnblue" id="btn-email-signin">Sign In</button>
+        <div class="lloader" id="ld-signin"></div><div class="lerr" id="err-signin"></div>
+        <div class="lotp-link" style="margin-top:10px;"><button class="llnkbtn" id="btn-goto-otp">Sign in without password (OTP)</button></div>
+      </div>
+      <div class="ldivrow"><div class="ldl"></div><div class="ldt">or</div><div class="ldl"></div></div>
+      <button class="lbtnout" id="btn-goto-reg">Create New Account</button>
+      <p class="lterms">By continuing you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>.</p>
+    </div>
+    <!-- S2 Register -->
+    <div id="ls-register" class="lscreen">
+      <button class="lback" id="back-reg"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Back</button>
+      <div class="lch">Create account</div><div class="lcs">We'll verify your email with a code</div>
+      <span class="llbl">Full name</span><input class="linp" id="reg-name" type="text" placeholder="Your full name" autocomplete="name"/>
+      <span class="llbl">Email address</span><input class="linp" id="reg-email" type="email" placeholder="name@example.com" autocomplete="email"/>
+      <button class="lbtnblue" id="btn-send-reg">Send Verification Email</button>
+      <div class="lloader" id="ld-reg"></div><div class="lerr" id="err-reg"></div>
+    </div>
+    <!-- S3 OTP -->
+    <div id="ls-reg-otp" class="lscreen">
+      <div class="lprog"><div class="lpd on"></div><div class="lpd on"></div><div class="lpd"></div><div class="lpd"></div></div>
+      <button class="lback" id="back-reg-otp"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Back</button>
+      <div class="lch">Verify email</div><div class="lcs">OTP sent to <span id="reg-dest" class="lhighlight"></span></div>
+      <span class="llbl">6-digit code</span>
+      <div class="lotp-row" id="reg-otp-row"><input class="lob" type="text" maxlength="1" inputmode="numeric"/><input class="lob" type="text" maxlength="1" inputmode="numeric"/><input class="lob" type="text" maxlength="1" inputmode="numeric"/><input class="lob" type="text" maxlength="1" inputmode="numeric"/><input class="lob" type="text" maxlength="1" inputmode="numeric"/><input class="lob" type="text" maxlength="1" inputmode="numeric"/></div>
+      <div class="ltmr">Expires in <span id="t-reg">2:00</span></div>
+      <button class="lbtnblue" id="btn-verify-reg">Verify &amp; Continue</button>
+      <div class="lloader" id="ld-reg-otp"></div><div class="lerr" id="err-reg-otp"></div>
+      <div class="lresend">Didn't receive it? <button class="llnkbtn" id="btn-resend-reg">Resend</button></div>
+    </div>
+    <!-- S4 Set password -->
+    <div id="ls-set-pass" class="lscreen">
+      <div class="lprog"><div class="lpd on"></div><div class="lpd on"></div><div class="lpd on"></div><div class="lpd"></div></div>
+      <div class="lch">Create password</div><div class="lcs">You'll use this to sign in next time</div>
+      <span class="llbl">New password</span>
+      <div class="lpww" style="margin-bottom:5px;"><input class="linp" id="sp1" type="password" placeholder="Min. 8 characters" oninput="chkStr(this.value)"/><button class="leye" onclick="toggleP('sp1')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      <div class="lsb-row"><div class="lsb" id="sb1"></div><div class="lsb" id="sb2"></div><div class="lsb" id="sb3"></div></div>
+      <div class="lpwh" id="pw-hint">Enter a password to see strength</div>
+      <span class="llbl">Confirm password</span>
+      <div class="lpww"><input class="linp" id="sp2" type="password" placeholder="Re-enter password"/><button class="leye" onclick="toggleP('sp2')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      <button class="lbtnblue" id="btn-set-pass" style="margin-bottom:8px;">Set Password &amp; Continue</button>
+      <div class="lloader" id="ld-set-pass"></div><div class="lerr" id="err-set-pass"></div>
+      <div style="text-align:center;margin-top:6px;"><button class="llnkbtn" id="btn-skip-pass">Skip — use OTP each time</button></div>
+    </div>
+    <!-- S5 OTP sign-in -->
+    <div id="ls-otp-signin" class="lscreen">
+      <button class="lback" id="back-otp"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Back</button>
+      <div class="lch">Sign in with OTP</div><div class="lcs">We'll send a magic sign-in link to your email</div>
+      <span class="llbl">Email address</span><input class="linp" id="otp-email" type="email" placeholder="name@example.com" autocomplete="email"/>
+      <button class="lbtnblue" id="btn-send-otp-link">Send Sign-in Link</button>
+      <div class="lloader" id="ld-otp"></div><div class="lerr" id="err-otp"></div>
+    </div>
+    <!-- S6 OTP sent -->
+    <div id="ls-otp-sent" class="lscreen" style="text-align:center;padding:16px 0;">
+      <div class="lokih" style="background:var(--green-s);"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#166534" stroke-width="1.8"/><path d="M22 6l-10 7L2 6" stroke="#166534" stroke-width="1.8"/></svg></div>
+      <div class="lch">Check your inbox!</div><div class="lcs" style="margin-bottom:18px;">Sign-in link sent to <span id="otp-sent-dest" class="lhighlight"></span></div>
+      <button class="lbtnblue" id="btn-back-otp-sent">Back to Sign In</button>
+    </div>
+    <!-- S7 Forgot -->
+    <div id="ls-forgot" class="lscreen">
+      <div class="lprog"><div class="lpd on"></div><div class="lpd"></div></div>
+      <button class="lback" id="back-forgot"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Back</button>
+      <div class="lch">Reset password</div><div class="lcs">Enter your email — we'll send a reset link</div>
+      <span class="llbl">Email address</span><input class="linp" id="forgot-email" type="email" placeholder="name@example.com"/>
+      <button class="lbtnblue" id="btn-send-reset">Send Reset Link</button>
+      <div class="lloader" id="ld-forgot"></div><div class="lerr" id="err-forgot"></div>
+    </div>
+    <!-- S8 Reset sent -->
+    <div id="ls-reset-sent" class="lscreen" style="text-align:center;padding:16px 0;">
+      <div class="lokih" style="background:var(--green-s);"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#166534" stroke-width="1.8"/><path d="M22 6l-10 7L2 6" stroke="#166534" stroke-width="1.8"/></svg></div>
+      <div class="lch">Reset link sent!</div><div class="lcs" style="margin-bottom:18px;">Check <span id="reset-dest" class="lhighlight"></span> and follow the link.</div>
+      <button class="lbtnblue" id="btn-back-reset">Back to Sign In</button>
+    </div>
+    <!-- S9 Google role -->
+    <div id="ls-google" class="lscreen">
+      <div class="lsucbanner"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>Signed in with Google — account ready!</div>
+      <div class="lch" style="margin-top:12px;">One last step</div><div class="lcs" style="margin-bottom:16px;">How will you use RideShare? You can switch roles anytime.</div>
+      <div id="gro1" class="lrole sel" onclick="pickRole('gro1','gro2')"><div class="lfic" style="background:var(--brand);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><ellipse cx="6" cy="17" rx="4" ry="4" stroke="#fff" stroke-width="2"/><ellipse cx="18" cy="17" rx="4" ry="4" stroke="#fff" stroke-width="2"/><path d="M6 17L10 8h4l4 9" stroke="#fff" stroke-width="2"/></svg></div><div><div style="font-weight:700;color:var(--txt);font-size:13px;">Rent a bike</div><div style="font-size:11px;color:var(--txt2);">Find &amp; book nearby rides</div></div></div>
+      <div id="gro2" class="lrole" onclick="pickRole('gro2','gro1')"><div class="lfic" style="background:var(--bdr);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6" stroke="var(--txt2)" stroke-width="2" stroke-linecap="round"/></svg></div><div><div style="font-weight:700;color:var(--txt);font-size:13px;">List my bike</div><div style="font-size:11px;color:var(--txt2);">Earn from idle vehicle</div></div></div>
+      <button class="lbtnblue" id="btn-google-go">Continue to App →</button>
+    </div>
+    <!-- S10 Role pick -->
+    <div id="ls-role" class="lscreen">
+      <div class="lprog"><div class="lpd on"></div><div class="lpd on"></div><div class="lpd on"></div><div class="lpd on"></div></div>
+      <div class="lch">I want to...</div><div class="lcs" style="margin-bottom:16px;">Pick your role — switch anytime.</div>
+      <div id="rro1" class="lrole sel" onclick="pickRole('rro1','rro2')"><div class="lfic" style="background:var(--brand);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><ellipse cx="6" cy="17" rx="4" ry="4" stroke="#fff" stroke-width="2"/><ellipse cx="18" cy="17" rx="4" ry="4" stroke="#fff" stroke-width="2"/><path d="M6 17L10 8h4l4 9" stroke="#fff" stroke-width="2"/></svg></div><div><div style="font-weight:700;color:var(--txt);font-size:13px;">Rent a bike</div><div style="font-size:11px;color:var(--txt2);">Book rides by the hour</div></div></div>
+      <div id="rro2" class="lrole" onclick="pickRole('rro2','rro1')"><div class="lfic" style="background:var(--bdr);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6" stroke="var(--txt2)" stroke-width="2" stroke-linecap="round"/></svg></div><div><div style="font-weight:700;color:var(--txt);font-size:13px;">List my bike</div><div style="font-size:11px;color:var(--txt2);">Earn passive income</div></div></div>
+      <button class="lbtnblue" id="btn-role-go">Enter RideShare →</button>
+    </div>
+  </div></div>
+</div>
+</div>
+
+<!-- ════════════════════════ APP PAGE ════════════════════════ -->
+<div id="page-app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo"><div class="logo-ic"><img class="brand-mark" src="assets/rideshare-logo.jpeg" alt="RideShare logo"/></div><span class="logo-txt">RideShare</span></div>
+    <div class="tsearch"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="rgba(255,255,255,0.6)" stroke-width="2"/><path d="M16.5 16.5L21 21" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round"/></svg><input id="search-inp" placeholder="Search bikes, owners..." oninput="filterBikes(this.value)"/></div>
+    <div class="tright">
+      <div class="rtoggle"><button class="rbtn on" id="role-rent" onclick="switchRole('rent')">Rent a bike</button><button class="rbtn" id="role-list" onclick="switchRole('list')">List my bike</button></div>
+      <div class="tlocation" id="tlocation-btn" onclick="locateUser()" title="Click to refresh location">
+        <div class="tlocation-dot"></div>
+        <span id="location-txt">Locating...</span>
+      </div>
+      <div class="tavatar" id="user-avatar" onclick="toggleAvatarMenu(event)">
+        <div class="avatar-media" id="avatar-media"><span id="avatar-initials">?</span></div>
+        <div class="avatar-menu" id="avatar-menu">
+          <div class="avatar-menu-header">
+            <div class="amh-name" id="amh-name">Loading...</div>
+            <div class="amh-email" id="amh-email"></div>
+          </div>
+          <button onclick="openModal('modal-profile');closeAvatarMenu()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Personal details</button>
+          <button onclick="navTo('bookings');closeAvatarMenu()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M8 7h8M8 12h8M8 17h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/></svg>My bookings</button>
+          <button onclick="navTo('kyc');closeAvatarMenu()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.8"/></svg>KYC & safety</button>
+          <button onclick="openModal('modal-payment-setup');closeAvatarMenu()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M2 10h20" stroke="currentColor" stroke-width="1.8"/></svg>Payment setup</button>
+          <button onclick="doSignOut()" class="danger"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="abody">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="nav-sec">Menu</div>
+      <div class="nav-item on" id="nav-browse" onclick="navTo('browse')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="#fff" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/></svg>Browse bikes</div>
+      <div class="nav-item" id="nav-bookings" onclick="navTo('bookings')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><rect x="9" y="3" width="6" height="4" rx="1" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/></svg>My bookings</div>
+      <div class="nav-item" id="nav-kyc" onclick="navTo('kyc')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/></svg>KYC &amp; safety</div>
+      <div class="nav-item" id="nav-damage" onclick="navTo('damage')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/></svg>Damage report</div>
+      <div class="nav-sec" style="margin-top:6px;">Owner</div>
+      <div class="nav-item" id="nav-listings" onclick="navTo('listings')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><path d="M12 6v6l4 2" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/></svg>My listings</div>
+      <div class="nav-item" id="nav-earnings" onclick="navTo('earnings')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/></svg>Earnings</div>
+      <div class="sidebar-foot">
+        <div class="sf-user">
+          <div class="sf-avatar" id="sf-avatar"><span id="sf-initials">?</span></div>
+          <div style="min-width:0;">
+            <div class="sf-name" id="sf-name">Loading...</div>
+            <div class="sf-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#69F0AE" stroke-width="2.5" stroke-linecap="round"/></svg><span id="sf-badge-text">Verified User</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="amain">
+      <div class="mhdr">
+        <div class="mhdr-l"><div class="ptitle" id="view-title">Browse bikes</div><div class="psub" id="view-sub">Loading your location...</div></div>
+        <div class="frow" id="filter-row">
+          <div class="fchip on" onclick="setFilter('all',this)">All</div>
+          <div class="fchip" onclick="setFilter('available',this)">Available now</div>
+          <div class="fchip" onclick="setFilter('cheap',this)">Under ₹30/hr</div>
+          <div class="fchip" onclick="setFilter('top',this)">Top rated ★4.5+</div>
+        </div>
+      </div>
+
+      <!-- VIEW: Browse -->
+      <div id="view-browse" class="view active">
+        <div class="browse-shell">
+          <div class="bike-col bike-col-upgraded">
+            <div class="bike-col-header"><span class="bc-title">Available bikes near you</span><span class="bc-count" id="bc-count">0 live</span></div>
+            <div id="bike-list-inner"></div>
+          </div>
+          <div class="browse-main">
+            <div class="browse-toolbar">
+              <div>
+                <div class="browse-kicker">Live booking workspace</div>
+                <div class="browse-lead">Browse only real-time available bikes listed by other users, compare distance instantly, and book the open slot that fits you.</div>
+              </div>
+              <div class="browse-toolbar-actions">
+                <button class="workspace-btn" id="map-toggle-btn" onclick="toggleMapPanel()">Open map</button>
+                <button class="workspace-btn" onclick="locateUser()">Refresh location</button>
+              </div>
+            </div>
+            <div class="workspace-metrics">
+              <div class="metric-card"><div class="metric-label">Available right now</div><div class="metric-value" id="stat-avail">0</div><div class="metric-sub">Live listings</div></div>
+              <div class="metric-card"><div class="metric-label">Average hourly price</div><div class="metric-value" id="stat-avg">₹0</div><div class="metric-sub">Across visible bikes</div></div>
+              <div class="metric-card"><div class="metric-label">Verified ride history</div><div class="metric-value" id="stat-rides">0</div><div class="metric-sub">Completed bookings</div></div>
+              <div class="metric-card"><div class="metric-label">Community rating</div><div class="metric-value" id="stat-rating">0.0★</div><div class="metric-sub">Live review average</div></div>
+              <div class="metric-card accent"><div class="metric-label">Selected bike</div><div class="metric-value" id="selected-distance">Choose a bike</div><div class="metric-sub" id="selected-distance-sub">Distance and open slots will appear here</div></div>
+            </div>
+            <div class="booking-stage">
+              <div class="booking-stage-head">
+                <div>
+                  <div class="booking-stage-kicker">Booking details</div>
+                  <div class="booking-stage-title" id="bp-title">Select a live listing</div>
+                </div>
+                <div class="booking-stage-sub" id="bp-sub">Choose any live listing to see owner details, available slots, distance, and booking price.</div>
+              </div>
+              <div class="bpb booking-stage-body" id="bpb-content">
+                <div class="empty-booking-state">
+                  <div class="empty-booking-icon">🛵</div>
+                  <div class="empty-booking-title">Choose a bike to continue</div>
+                  <div class="empty-booking-copy">Your booking panel will show live slots, owner details, bike photo, distance, and the payment summary here.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="map-container" class="map-dock collapsed">
+            <div class="map-dock-head">
+              <div>
+                <div class="map-dock-title">Live map</div>
+                <div class="map-dock-sub">Opens only when you need location context</div>
+              </div>
+              <div class="map-dock-actions">
+                <button class="map-icon-btn" onclick="locateUser()" title="Refresh location"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+                <button class="map-icon-btn" onclick="toggleMapPanel()" title="Toggle map"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              </div>
+            </div>
+            <div class="map-dock-body">
+              <div id="map"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: My Bookings -->
+      <div id="view-bookings" class="view"><div class="view-inner">
+        <div class="section-head">Active rides</div>
+        <div id="bookings-active-list"><div class="card-box" style="font-size:12px;color:var(--txt2);">Loading your active rides…</div></div>
+        <div class="section-head">Upcoming</div>
+        <div id="bookings-upcoming-list"><div class="card-box" style="font-size:12px;color:var(--txt2);">Checking pending and confirmed rides…</div></div>
+        <div class="section-head">Past rides</div>
+        <div id="bookings-past-list"><div class="card-box" style="font-size:12px;color:var(--txt2);">Your completed rides will appear here after the first booking.</div></div>
+      </div></div>
+
+      <!-- VIEW: KYC -->
+      <div id="view-kyc" class="view"><div class="view-inner">
+        <div class="section-head">Identity Verification</div>
+        <div class="info-panel" style="margin-bottom:14px;">Upload the required documents below. Review status updates appear here as soon as your documents are processed.</div>
+        <div class="kyc-grid">
+          <div class="kyc-card" id="kyc-aadhaar">
+            <div class="kyc-icon" style="background:#E8F5E9;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="#166534" stroke-width="1.8"/><path d="M7 9h10M7 13h6" stroke="#166534" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+            <div class="kyc-title">Aadhaar / ID Card</div><div class="kyc-sub">Government-issued photo ID</div>
+            <div class="kyc-status req" id="kyc-aadhaar-status">✕ Not uploaded</div>
+            <div class="kyc-upload-area" id="kyc-aadhaar-area">
+              <input type="file" accept="image/*,.pdf" onchange="handleKycUpload(this,'aadhaar')"/>
+              <div class="kyc-upload-txt">📄 Upload front &amp; back<br/><span style="font-size:10px;color:var(--txt3);">JPG, PNG or PDF · Max 5MB</span></div>
+            </div>
+          </div>
+          <div class="kyc-card" id="kyc-license">
+            <div class="kyc-icon" style="background:#E8F5E9;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="13" rx="2" stroke="#166534" stroke-width="1.8"/><path d="M3 10h18M7 15h4" stroke="#166534" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+            <div class="kyc-title">Driving Licence</div><div class="kyc-sub">Valid driving licence (mandatory to ride)</div>
+            <div class="kyc-status req" id="kyc-license-status">✕ Not uploaded</div>
+            <div class="kyc-upload-area" id="kyc-license-area">
+              <input type="file" accept="image/*,.pdf" onchange="handleKycUpload(this,'license')"/>
+              <div class="kyc-upload-txt">📄 Upload front &amp; back<br/><span style="font-size:10px;color:var(--txt3);">JPG, PNG or PDF · Max 5MB</span></div>
+            </div>
+          </div>
+          <div class="kyc-card" id="kyc-selfie">
+            <div class="kyc-icon" style="background:var(--warn-s);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#92400E" stroke-width="1.8"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#92400E" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+            <div class="kyc-title">Selfie Verification</div><div class="kyc-sub">Live photo — face clearly visible</div>
+            <div class="kyc-status pend" id="kyc-selfie-status">⏳ Under review</div>
+            <div class="kyc-upload-area" id="kyc-selfie-area">
+              <input type="file" accept="image/*" capture="user" onchange="handleKycUpload(this,'selfie')"/>
+              <div class="kyc-upload-txt">📷 Take selfie or upload<br/><span style="font-size:10px;color:var(--txt3);">Face must be clearly visible · Max 5MB</span></div>
+            </div>
+          </div>
+          <div class="kyc-card" id="kyc-address">
+            <div class="kyc-icon" style="background:var(--err-s);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="#991b1b" stroke-width="1.8"/></svg></div>
+            <div class="kyc-title">Address Proof</div><div class="kyc-sub">Utility bill or bank statement</div>
+            <div class="kyc-status req" id="kyc-address-status">✕ Not uploaded</div>
+            <div class="kyc-upload-area" id="kyc-address-area">
+              <input type="file" accept="image/*,.pdf" onchange="handleKycUpload(this,'address')"/>
+              <div class="kyc-upload-txt">📄 Upload document<br/><span style="font-size:10px;color:var(--txt3);">Must show name &amp; address · Max 5MB</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-head">Emergency Contacts</div>
+        <div class="card-box">
+          <div style="font-size:12px;color:var(--txt2);margin-bottom:14px;">Add one trusted contact for emergency alerts during active rides.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div><span class="inp-label">Contact name</span><input class="minp" id="ec-name" placeholder="Full name" style="height:38px;"/></div>
+            <div><span class="inp-label">Relationship</span><select class="mselect" id="ec-relationship" style="height:38px;margin:0;"><option>Family</option><option>Friend</option><option>Colleague</option></select></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div><span class="inp-label">Phone number</span><input class="minp" id="ec-phone" placeholder="+91 XXXXX XXXXX" type="tel" style="height:38px;"/></div>
+            <div><span class="inp-label">Email (optional)</span><input class="minp" id="ec-email" placeholder="email@example.com" type="email" style="height:38px;"/></div>
+          </div>
+          <button class="lbtnblue" style="width:auto;padding:9px 20px;font-size:12px;margin:0;" onclick="saveEmergencyContact()">Save emergency contact</button>
+        </div>
+
+        <div class="section-head">Safety Features</div>
+        <div class="card-box" style="padding:8px 14px;">
+          <div class="toggle-row"><div><div class="toggle-label">GPS tracking during rides</div><div class="toggle-sub">Share live location with emergency contact &amp; owner</div></div><label class="tswitch"><input type="checkbox" checked id="toggle-gps" onchange="saveToggle('gps',this.checked)"/><span class="tslider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Ride alerts via SMS</div><div class="toggle-sub">Get SMS confirmation when ride starts and ends</div></div><label class="tswitch"><input type="checkbox" checked id="toggle-sms" onchange="saveToggle('sms',this.checked)"/><span class="tslider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">SOS quick dial</div><div class="toggle-sub">One-tap call to emergency contact during active ride</div></div><label class="tswitch"><input type="checkbox" id="toggle-sos" onchange="saveToggle('sos',this.checked)"/><span class="tslider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Damage detection alerts</div><div class="toggle-sub">Notified if unusual activity reported on your vehicle</div></div><label class="tswitch"><input type="checkbox" checked id="toggle-dmg" onchange="saveToggle('damage_alert',this.checked)"/><span class="tslider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">Email ride receipts</div><div class="toggle-sub">Automatically email receipts after every ride</div></div><label class="tswitch"><input type="checkbox" checked id="toggle-receipt" onchange="saveToggle('receipts',this.checked)"/><span class="tslider"></span></label></div>
+        </div>
+      </div></div>
+
+      <!-- VIEW: Damage Report -->
+      <div id="view-damage" class="view"><div class="view-inner">
+        <div class="dmg-steps">
+          <div class="dmg-step active" id="ds1"><div class="dmg-num">1</div><div class="dmg-lbl">Report</div></div>
+          <div class="dmg-step" id="ds2"><div class="dmg-num">2</div><div class="dmg-lbl">Assess</div></div>
+          <div class="dmg-step" id="ds3"><div class="dmg-num">3</div><div class="dmg-lbl">Pay</div></div>
+          <div class="dmg-step" id="ds4"><div class="dmg-num">4</div><div class="dmg-lbl">Service</div></div>
+        </div>
+        <div id="dp-1">
+          <div class="section-head">Which bike was affected?</div>
+          <select class="mselect" id="dmg-bike-sel"><option value="">Select the bike</option></select>
+          <div class="section-head">Damage severity</div>
+          <div class="sev-opts">
+            <div class="sev-opt on" id="sev-minor" onclick="setSev('minor')">Minor<div style="font-size:10px;margin-top:2px;">Scratch/dent</div></div>
+            <div class="sev-opt" id="sev-moderate" onclick="setSev('moderate')">Moderate<div style="font-size:10px;margin-top:2px;">Body damage</div></div>
+            <div class="sev-opt" id="sev-severe" onclick="setSev('severe')">Severe<div style="font-size:10px;margin-top:2px;">Accident</div></div>
+          </div>
+          <div class="section-head">Upload damage photos <span style="color:var(--err);font-size:10px;">(Min 2 required)</span></div>
+          <div class="photo-drop" id="dmg-photo-drop">
+            <input type="file" id="dmg-photo-input" accept="image/*" multiple onchange="handleDmgPhotos(this)"/>
+            <div style="font-size:28px;margin-bottom:6px;">📸</div>
+            <div style="font-size:13px;color:var(--txt2);font-weight:500;">Tap to add damage photos</div>
+            <div style="font-size:11px;color:var(--txt3);margin-top:3px;">You can remove any selected photo before submitting</div>
+          </div>
+          <div class="photo-preview" id="dmg-preview"></div>
+          <div class="section-head">Describe what happened</div>
+          <select class="mselect" style="margin-bottom:10px;" id="dmg-type-sel"><option>Minor scratch while parking</option><option>Dent from collision</option><option>Mirror broken</option><option>Tyre puncture</option><option>Engine damage</option><option>Accident — third party involved</option><option>Other (describe below)</option></select>
+          <textarea class="mtarea" id="dmg-description" rows="3" placeholder="Provide a detailed account of what happened, where, and when..."></textarea>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+            <div><span class="inp-label">Date of incident</span><input class="minp" type="date" id="dmg-date" style="height:38px;"/></div>
+            <div><span class="inp-label">Time of incident</span><input class="minp" type="time" id="dmg-time" style="height:38px;"/></div>
+          </div>
+          <button class="lbtnblue" style="margin-top:12px;" onclick="submitDamageReport()">Submit report &amp; notify owner →</button>
+        </div>
+        <div id="dp-2" style="display:none;">
+          <div class="info-panel" style="margin-bottom:14px;"><strong>⚠ Damage assessment submitted</strong><br/>Your report has been sent to the bike owner and our team. An assessment email will be sent to your registered email address within 2 hours. The bike owner has been notified.</div>
+          <div class="card-box"><div class="section-head">Estimated costs</div>
+            <div class="sumrow"><span>Repair estimate (minor scratch)</span><span>₹450–600</span></div>
+            <div class="sumrow"><span>Service centre handling</span><span>₹75</span></div>
+            <div class="sumrow tot"><span>Your estimated liability</span><span>₹525–675</span></div>
+          </div>
+          <button class="lbtnblue" onclick="dmgStep(3)">Proceed to payment →</button>
+        </div>
+        <div id="dp-3" style="display:none;">
+          <div class="card-box" style="margin-bottom:14px;">
+            <div class="sumrow"><span>Repair cost</span><span>₹525</span></div>
+            <div class="sumrow"><span>Service centre fee</span><span>₹75</span></div>
+            <div class="sumrow tot"><span>Total due</span><span>₹600</span></div>
+          </div>
+          <button class="lbtnblue" onclick="payDamage(600)">Pay ₹600 via Razorpay →</button>
+          <div style="font-size:11px;color:var(--txt2);text-align:center;margin-top:10px;">Secured by Razorpay · GPay, card, UPI accepted</div>
+        </div>
+        <div id="dp-4" style="display:none;">
+          <div class="success-panel" style="margin-bottom:14px;">✅ Payment received! Drop the bike at the designated service centre before the appointment time.</div>
+          <div class="card-box">
+            <div style="font-size:13px;font-weight:700;color:var(--txt);margin-bottom:4px;">TVS Authorised Service — Tambaram</div>
+            <div style="font-size:12px;color:var(--txt2);line-height:1.7;">123, GST Road, Tambaram, Chennai 600045<br/>📅 Drop before: <strong>Tomorrow, 10:00 AM</strong><br/>📞 Service centre: +91 44 2226 XXXX</div>
+            <button class="lbtnblue" style="margin-top:12px;font-size:12px;" onclick="toast('Opening Google Maps...','ok')">Get directions →</button>
+          </div>
+          <div style="font-size:11px;color:var(--txt2);margin-top:10px;text-align:center;">This bike is blocked for rentals until repairs are confirmed by the service centre.</div>
+        </div>
+      </div></div>
+
+      <!-- VIEW: My Listings -->
+      <div id="view-listings" class="view"><div class="view-inner owner-view">
+        <div class="owner-grid">
+          <div class="owner-column">
+            <div class="section-head">Your listed bikes</div>
+            <div id="listings-list"><div class="card-box" style="font-size:12px;color:var(--txt2);">Your live listings will appear here after they are created.</div></div>
+
+            <div class="section-head" style="margin-top:22px;" id="listing-schedule-title">Availability schedule</div>
+            <div class="card-box">
+              <div style="font-size:12px;color:var(--txt2);margin-bottom:12px;">Select a listed bike to update its working days, hours, minimum duration, and hourly price.</div>
+              <div class="day-grid" id="day-grid">
+                <button class="day-btn on" onclick="toggleDay(this)">Mon</button>
+                <button class="day-btn on" onclick="toggleDay(this)">Tue</button>
+                <button class="day-btn on" onclick="toggleDay(this)">Wed</button>
+                <button class="day-btn on" onclick="toggleDay(this)">Thu</button>
+                <button class="day-btn on" onclick="toggleDay(this)">Fri</button>
+                <button class="day-btn" onclick="toggleDay(this)">Sat</button>
+                <button class="day-btn" onclick="toggleDay(this)">Sun</button>
+              </div>
+              <div style="display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap;">
+                <div><span class="inp-label">From</span><input class="minp" type="time" value="09:00" id="avail-from" style="height:36px;"/></div>
+                <div><span class="inp-label">To</span><input class="minp" type="time" value="17:00" id="avail-to" style="height:36px;"/></div>
+                <div style="padding-top:18px;"><button class="lbtnblue" style="width:auto;padding:8px 16px;font-size:12px;margin:0;" onclick="saveSchedule()">Save schedule</button></div>
+              </div>
+              <div style="margin-top:12px;font-size:12px;color:var(--txt2);">Minimum rental duration: <select class="mselect" id="min-duration-select" style="height:32px;width:auto;display:inline-block;padding:0 8px;font-size:12px;"><option>1 hour</option><option>2 hours</option><option>Half day</option></select> &nbsp; Price per hour: ₹<input class="minp" id="schedule-price-input" type="number" value="35" style="height:32px;width:70px;display:inline-block;padding:0 8px;font-size:12px;"/></div>
+            </div>
+          </div>
+          <div class="owner-column">
+            <div class="section-head">List your bike professionally</div>
+            <div class="card-box owner-form-card">
+              <div class="owner-form-head">
+                <div class="owner-form-title">Create a new live listing</div>
+                <div class="owner-form-copy">Add bike details, working days, rental duration, pricing, and a photo. Only active bikes with open slots appear in the renter dashboard.</div>
+              </div>
+              <div class="owner-form-grid">
+                <div><span class="inp-label">Bike type</span><select class="mselect" id="listing-bike-type"><option>Scooter</option><option>Motorcycle</option><option>Electric scooter</option><option>Electric bike</option><option>Commuter bike</option><option>Sports bike</option></select></div>
+                <div><span class="inp-label">Contact number</span><input class="minp" id="listing-contact-number" placeholder="+91 XXXXX XXXXX" type="tel"/></div>
+                <div style="grid-column:1 / -1;"><span class="inp-label">Bike name</span><input class="minp" id="listing-bike-name" placeholder="e.g. Honda Activa 6G"/></div>
+                <div><span class="inp-label">Registration number</span><input class="minp" id="listing-bike-reg" placeholder="TN07AB1234" type="text"/></div>
+                <div><span class="inp-label">Price per hour (₹)</span><input class="minp" id="listing-bike-price" placeholder="35" type="number" min="10" max="500"/></div>
+                <div style="grid-column:1 / -1;">
+                  <span class="inp-label">Available days</span>
+                  <div class="day-grid day-grid-form" id="create-day-grid">
+                    <button class="day-btn on" onclick="toggleDay(this)">Mon</button>
+                    <button class="day-btn on" onclick="toggleDay(this)">Tue</button>
+                    <button class="day-btn on" onclick="toggleDay(this)">Wed</button>
+                    <button class="day-btn on" onclick="toggleDay(this)">Thu</button>
+                    <button class="day-btn on" onclick="toggleDay(this)">Fri</button>
+                    <button class="day-btn on" onclick="toggleDay(this)">Sat</button>
+                    <button class="day-btn on" onclick="toggleDay(this)">Sun</button>
+                  </div>
+                </div>
+                <div><span class="inp-label">Available from</span><input class="minp" id="listing-from" type="time" value="09:00" style="height:38px;"/></div>
+                <div><span class="inp-label">Available till</span><input class="minp" id="listing-to" type="time" value="17:00" style="height:38px;"/></div>
+                <div style="grid-column:1 / -1;"><span class="inp-label">Minimum rental duration</span><select class="mselect" id="listing-min-duration"><option>1 hour</option><option>2 hours</option><option>3 hours</option><option>Half day</option><option>Full day</option></select></div>
+                <div style="grid-column:1 / -1;"><span class="inp-label">Bike condition</span><textarea class="mtarea" id="listing-bike-cond" rows="4" placeholder="Describe the bike condition, fuel/charge status, scratches, seat condition, and any notes renters should know."></textarea></div>
+                <div style="grid-column:1 / -1;">
+                  <span class="inp-label">Bike photo</span>
+                  <label class="listing-photo-drop">
+                    <input type="file" id="listing-bike-photo" accept="image/jpeg,image/png,image/webp" onchange="previewListingPhoto(this)"/>
+                    <span class="listing-photo-copy">Tap to upload a clear front or 3/4 angle image of this bike.</span>
+                  </label>
+                  <div class="upload-file-card" id="listing-photo-preview" hidden>
+                    <img class="upload-file-thumb" id="listing-photo-thumb" alt="Selected bike photo"/>
+                    <div class="upload-file-meta">
+                      <div class="upload-file-name" id="listing-photo-name"></div>
+                      <div class="upload-file-sub" id="listing-photo-sub"></div>
+                    </div>
+                    <button class="upload-file-remove" type="button" onclick="clearListingPhoto()">Remove</button>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-actions" style="margin-top:18px;">
+                <button class="mbtn ghost" onclick="resetListingForm()">Clear form</button>
+                <button class="mbtn primary" onclick="addBikeListing()">Publish listing</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+
+      <!-- VIEW: Earnings -->
+      <div id="view-earnings" class="view"><div class="view-inner">
+        <div class="earn-hero">
+          <div class="earn-total-lbl">Total earnings this month</div>
+          <div class="earn-total" id="earn-total">₹0.00</div>
+          <div class="earn-sub" id="earn-sub">Your owner earnings update in real time once bookings are captured.</div>
+          <div class="earn-grid">
+            <div class="earn-mini"><div class="earn-mini-lbl">This week</div><div class="earn-mini-val" id="earn-week">₹0.00</div></div>
+            <div class="earn-mini"><div class="earn-mini-lbl">Pending</div><div class="earn-mini-val" id="earn-pending">₹0.00</div></div>
+            <div class="earn-mini"><div class="earn-mini-lbl">Withdrawn</div><div class="earn-mini-val" id="earn-withdrawn">₹0.00</div></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:16px;">
+          <button class="lbtnblue" id="withdraw-btn" style="width:auto;padding:10px 18px;font-size:13px;margin:0;" onclick="initiateWithdrawal()">Withdraw ₹0.00 to bank</button>
+          <button class="lbtnout" style="width:auto;padding:10px 18px;font-size:13px;" onclick="openModal('modal-payment-setup')">🏦 Bank account settings</button>
+        </div>
+        <div class="razorpay-note" style="margin-bottom:16px;">💳 <strong>Razorpay Route enabled</strong> — All payments are auto-split: 92% to your linked bank account, 8% to the RideShare platform. Withdrawals process within 2–3 business days.</div>
+        <div class="section-head">Transaction history</div>
+        <div class="card-box" style="padding:8px 14px;" id="txn-list"><div style="padding:14px 0;font-size:12px;color:var(--txt2);">No transactions yet. Your ride credits will appear here once someone books your bike.</div></div>
+      </div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ MODALS ════════ -->
+<!-- Booking confirmed -->
+<div class="modal-overlay" id="modal-book"><div class="modal">
+  <div class="modal-title">🎉 Booking confirmed!</div>
+  <div class="modal-sub" id="book-msg">Your bike is booked and ready.</div>
+  <div class="card-box" style="font-size:12px;line-height:2;color:var(--txt2);">Booking ID: <strong id="book-id">#RS2024001</strong><br/>Amount: <strong id="book-amt">₹37.80</strong><br/>Payment: via Razorpay<br/>A confirmation email has been sent to your registered email.</div>
+  <div class="modal-actions"><button class="mbtn ghost" onclick="closeModal('modal-book')">Close</button><button class="mbtn primary" onclick="navTo('bookings');closeModal('modal-book')">View bookings</button></div>
+</div></div>
+<!-- Rating -->
+<div class="modal-overlay" id="modal-rating"><div class="modal">
+  <div class="modal-title">Rate your ride</div>
+  <div class="modal-sub">How was your experience with <span id="rate-bike-name" style="font-weight:700;">this bike</span>?</div>
+  <div style="margin-bottom:14px;"><div style="font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:8px;">Overall rating</div><div style="display:flex;gap:4px;" id="star-row"><span class="mstar lit" onclick="setStars(1)">★</span><span class="mstar lit" onclick="setStars(2)">★</span><span class="mstar lit" onclick="setStars(3)">★</span><span class="mstar lit" onclick="setStars(4)">★</span><span class="mstar" onclick="setStars(5)">★</span></div></div>
+  <div style="font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:8px;">Bike condition</div>
+  <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;" id="cond-tags">
+    <span class="ctag" style="cursor:pointer;" onclick="toggleCondTag(this)">Clean</span>
+    <span class="ctag" style="cursor:pointer;" onclick="toggleCondTag(this)">No damage</span>
+    <span class="ctag warn" style="cursor:pointer;" onclick="toggleCondTag(this)">Minor scratch</span>
+    <span class="ctag warn" style="cursor:pointer;" onclick="toggleCondTag(this)">Low fuel</span>
+    <span class="ctag" style="cursor:pointer;" onclick="toggleCondTag(this)">Great condition</span>
+  </div>
+  <textarea class="mtarea" id="review-text" rows="3" placeholder="Leave a review for future renters..."></textarea>
+  <div class="modal-actions"><button class="mbtn ghost" onclick="closeModal('modal-rating')">Skip</button><button class="mbtn primary" onclick="submitRating()">Submit rating</button></div>
+</div></div>
+<!-- Cancel -->
+<div class="modal-overlay" id="modal-cancel"><div class="modal">
+  <div class="modal-title">Cancel booking?</div>
+  <div class="modal-sub">Cancellations within 1 hour of ride time incur a 20% fee (₹7.00). The remaining amount will be refunded to your original payment method within 3–5 days.</div>
+  <div class="modal-actions"><button class="mbtn ghost" onclick="closeModal('modal-cancel')">Keep booking</button><button class="mbtn danger" onclick="cancelBooking()">Yes, cancel</button></div>
+</div></div>
+<!-- Extend -->
+<div class="modal-overlay" id="modal-extend"><div class="modal">
+  <div class="modal-title">Extend your ride</div>
+  <div class="modal-sub">Current end time: <strong>12:00 PM</strong>. Subject to bike availability.</div>
+  <select class="mselect" id="extend-sel"><option value="0.5">+30 minutes (+₹17.50)</option><option value="1">+1 hour (+₹35.00)</option><option value="2">+2 hours (+₹70.00)</option></select>
+  <div class="modal-actions"><button class="mbtn ghost" onclick="closeModal('modal-extend')">Cancel</button><button class="mbtn primary" onclick="confirmExtend()">Confirm &amp; pay</button></div>
+</div></div>
+<!-- Razorpay / Payment Setup -->
+<div class="modal-overlay" id="modal-payment-setup"><div class="modal">
+  <div class="modal-title">Payment setup</div>
+  <div class="modal-sub">Add your bank details to receive earnings from bike rentals. Processed securely via Razorpay Route.</div>
+  <div class="razorpay-note" style="margin-bottom:14px;">🔒 Bank details are encrypted and stored securely by Razorpay. RideShare never stores your banking credentials.</div>
+  <span class="inp-label">Account holder name</span><input class="minp" id="bank-name" placeholder="As per bank records"/>
+  <span class="inp-label">Account number</span><input class="minp" id="bank-acc" placeholder="XXXXXXXXXXXX" type="password"/>
+  <span class="inp-label">IFSC code</span><input class="minp" id="bank-ifsc" placeholder="HDFC0001234"/>
+  <span class="inp-label">Bank name</span><input class="minp" id="bank-bank" placeholder="HDFC Bank"/>
+  <span class="inp-label">UPI ID (optional — for instant transfers)</span><input class="minp" id="bank-upi" placeholder="yourname@upi"/>
+  <div class="modal-actions"><button class="mbtn ghost" onclick="closeModal('modal-payment-setup')">Cancel</button><button class="mbtn primary" onclick="saveBankDetails()">Save bank details</button></div>
+</div></div>
+<!-- Profile -->
+<div class="modal-overlay" id="modal-profile"><div class="modal">
+  <div class="modal-title">Personal details</div>
+  <div class="modal-sub">Manage the profile information that owners and renters see throughout the live marketplace.</div>
+  <div class="profile-pic-area">
+    <div class="profile-pic-circle" id="profile-pic-circle">
+      <div class="ppc-initials" id="ppc-initials">?</div>
+      <div class="ppc-overlay">📷 Change</div>
+      <input type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadProfilePic(this)"/>
+    </div>
+    <div style="font-size:12px;color:var(--txt2);">Profile photo uploads now go through your EC2 API and S3 bucket.</div>
+  </div>
+  <div class="profile-form-grid">
+    <div><span class="inp-label">Full name</span><input class="minp" id="prof-name" placeholder="Your full name"/></div>
+    <div><span class="inp-label">Display name</span><input class="minp" id="prof-display" placeholder="Nickname or short name"/></div>
+    <div><span class="inp-label">Phone number</span><input class="minp" id="prof-phone" placeholder="+91 XXXXX XXXXX" type="tel"/></div>
+    <div><span class="inp-label">Email address</span><input class="minp" id="prof-email-inp" placeholder="email@example.com" type="email" readonly style="opacity:.6;cursor:not-allowed;"/></div>
+    <div style="grid-column:1 / -1;"><span class="inp-label">City / Area</span><input class="minp" id="prof-city" placeholder="e.g. Vandalur, Chennai"/></div>
+  </div>
+  <div class="profile-action-row">
+    <button class="ghost-link-btn" onclick="closeModal('modal-profile');navTo('kyc')">Open KYC & safety</button>
+    <button class="ghost-link-btn" onclick="closeModal('modal-profile');openModal('modal-payment-setup')">Open payment setup</button>
+  </div>
+  <div class="modal-actions"><button class="mbtn ghost" onclick="closeModal('modal-profile')">Cancel</button><button class="mbtn primary" onclick="saveProfile()">Save changes</button></div>
+</div></div>
+<!-- Edit listing -->
+<div class="modal-overlay" id="modal-edit-listing"><div class="modal">
+  <div class="modal-title">Edit listing</div>
+  <div class="modal-sub" id="edit-listing-name">Honda Activa 6G</div>
+  <span class="inp-label">Price per hour (₹)</span><input class="minp" id="edit-price" type="number"/>
+  <span class="inp-label">Bike description / condition</span><textarea class="mtarea" id="edit-desc" rows="3" placeholder="Describe your bike's current condition..."></textarea>
+  <div class="modal-actions"><button class="mbtn ghost" onclick="closeModal('modal-edit-listing')">Cancel</button><button class="mbtn primary" onclick="saveListingEdit()">Save changes</button></div>
+</div></div>
+</body>
+</html>
+<!-- ════════ SCRIPTS ════════ -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+import{getAuth,GoogleAuthProvider,signInWithPopup,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendEmailVerification,sendPasswordResetEmail,sendSignInLinkToEmail,isSignInWithEmailLink,signInWithEmailLink,updateProfile,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+import{getFirestore,collection,doc,setDoc,getDoc,updateDoc,onSnapshot,addDoc,query,orderBy,getDocs,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+const FB=initializeApp({apiKey:"AIzaSyCtRp3ydaReZEb7RQcjf4tnYraPJWlh2UE",authDomain:"bike-rental-mvp-eb787.firebaseapp.com",projectId:"bike-rental-mvp-eb787",storageBucket:"bike-rental-mvp-eb787.firebasestorage.app",messagingSenderId:"850320602989",appId:"1:850320602989:web:097722db77cd494704cc64"});
+const auth=getAuth(FB);
+const db=getFirestore(FB);
+
+/* ════ GLOBALS ════ */
+let currentUser=null,currentProfileUrl=null,currentProfileUploadId=null,selBike=null,selSlot=0,selStar=4,curFilter='all',curSearch='',leafMap=null,userMarker=null,bikeMarkers={},dmgCurStep=1,dmgSeverity='minor',dmgPhotos=[],latestDamageReportId=null,ownerListings=[],riderBookings=[],ownerBookings=[],withdrawalRequests=[],damageReports=[],damageBikeChoices=[],selectedListingId=null,liveUnsubs=[],bikeData=[],currentCoords=null,mapExpanded=false,listingPhotoPreviewUrl=null,dmgPhotoPreviewUrls=[];
+const uploadUrlCache=new Map();
+
+function resolveApiBaseUrl(){
+  const configuredMeta=document.querySelector('meta[name="rideshare-api-base"]')?.content?.trim();
+  const configuredWindow=window.__RIDESHARE_CONFIG__?.apiBaseUrl?.trim?.();
+  const configuredStorage=window.localStorage.getItem('rideshareApiBaseUrl')?.trim();
+  const localDefault=window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1'?'http://127.0.0.1:3000':'';
+  const configured=configuredStorage||configuredWindow||configuredMeta||localDefault;
+  if(!configured)return'';
+  let normalized=configured.replace(/\/$/,'');
+  if(window.location.protocol==='https:'&&normalized.startsWith('http://')){
+    normalized=normalized.replace(/^http:/,'https:');
+  }
+  return normalized;
+}
+
+const API_BASE_URL=resolveApiBaseUrl();
+
+async function apiRequest(path,{method='GET',body,headers={}}={}){
+  if(!API_BASE_URL){
+    throw new Error('Backend API is not configured. Set window.localStorage.rideshareApiBaseUrl to your HTTPS EC2 API URL.');
+  }
+  const token=auth.currentUser?await auth.currentUser.getIdToken():null;
+  const opts={method,headers:{...headers}};
+  if(token)opts.headers.Authorization=`Bearer ${token}`;
+  if(body!==undefined){
+    opts.headers['Content-Type']='application/json';
+    opts.body=JSON.stringify(body);
+  }
+  const resp=await fetch(`${API_BASE_URL}${path}`,opts);
+  const isJson=(resp.headers.get('content-type')||'').includes('application/json');
+  const data=isJson?await resp.json():null;
+  if(!resp.ok)throw new Error(data?.error||`Request failed with status ${resp.status}`);
+  return data;
+}
+
+const callableProxy=path=>async payload=>({data:await apiRequest(path,{method:'POST',body:payload})});
+const createUploadSessionFn=callableProxy('/upload/create-session');
+const finalizeUploadFn=callableProxy('/upload/finalize');
+const createBookingOrderFn=callableProxy('/payments/booking/create-order');
+const verifyBookingPaymentFn=callableProxy('/payments/booking/verify');
+const createDamagePaymentOrderFn=callableProxy('/payments/damage/create-order');
+const verifyDamagePaymentFn=callableProxy('/payments/damage/verify');
+const saveBankAccountFn=callableProxy('/bank/save');
+const requestWithdrawalFn=callableProxy('/withdrawals/request');
+
+async function uploadPrivateFile(file,purpose,docType){
+  const{data:uploadData}=await createUploadSessionFn({purpose,docType,mimeType:file.type,size:file.size,fileName:file.name});
+  const resp=await fetch(uploadData.uploadUrl,{method:'PUT',headers:{'Content-Type':file.type},body:file});
+  if(!resp.ok)throw new Error(`Upload failed with status ${resp.status}`);
+  const{data:finalized}=await finalizeUploadFn({uploadId:uploadData.uploadId});
+  return{uploadId:uploadData.uploadId,s3Key:uploadData.s3Key||uploadData.key,status:finalized.status,fileName:file.name,mimeType:file.type,size:file.size};
+}
+
+async function getUploadDownloadUrl(uploadId){
+  if(!uploadId)return null;
+  if(uploadUrlCache.has(uploadId))return uploadUrlCache.get(uploadId);
+  const promise=apiRequest(`/upload/download-url/${uploadId}`).then(data=>data.url).catch(()=>null);
+  uploadUrlCache.set(uploadId,promise);
+  return promise;
+}
+
+function haversineKm(a,b){
+  if(!a||!b)return null;
+  const toRad=value=>value*Math.PI/180;
+  const dLat=toRad(b.lat-a.lat);
+  const dLng=toRad(b.lng-a.lng);
+  const sinLat=Math.sin(dLat/2);
+  const sinLng=Math.sin(dLng/2);
+  const root=sinLat*sinLat+Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*sinLng*sinLng;
+  return 6371*(2*Math.atan2(Math.sqrt(root),Math.sqrt(1-root)));
+}
+
+function formatDistance(value){
+  const distance=Number(value);
+  if(!Number.isFinite(distance)||distance<0)return'—';
+  if(distance<1)return`${Math.round(distance*1000)} m`;
+  return`${distance.toFixed(distance<10?1:0)} km`;
+}
+
+function formatFileSize(bytes){
+  const size=Number(bytes||0);
+  if(size>=1024*1024)return`${(size/(1024*1024)).toFixed(1)} MB`;
+  if(size>=1024)return`${Math.round(size/1024)} KB`;
+  return`${size} B`;
+}
+
+function bikeDistanceKm(bike){
+  if(currentCoords&&bike?.lat&&bike?.lng){
+    return haversineKm(currentCoords,{lat:Number(bike.lat),lng:Number(bike.lng)});
+  }
+  const fallback=Number(bike?.dist);
+  return Number.isFinite(fallback)?fallback:null;
+}
+
+function getBikeReviewCount(bike){
+  const count=Number(bike?.reviewCount||0);
+  return Number.isFinite(count)&&count>0?count:0;
+}
+
+function getBikeAverageRating(bike){
+  const rating=Number(bike?.rating);
+  return Number.isFinite(rating)&&getBikeReviewCount(bike)>0?rating:null;
+}
+
+function getRatingMarkup(bike,size=10){
+  const rating=getBikeAverageRating(bike);
+  if(rating===null)return'<span class="bc-rat">Not rated</span>';
+  return`${renderStars(rating,size)}<span class="bc-rat"> ${rating.toFixed(1)} (${getBikeReviewCount(bike)})</span>`;
+}
+
+function getPopupRatingMarkup(bike){
+  const rating=getBikeAverageRating(bike);
+  if(rating===null)return'<span style="color:var(--txt2);font-weight:600;">Not rated</span>';
+  const full=Math.round(rating);
+  const stars='★'.repeat(full)+'☆'.repeat(5-full);
+  return`${stars} ${rating.toFixed(1)} (${getBikeReviewCount(bike)})`;
+}
+
+function openSlotCount(bike){
+  return(bike?.slots||[]).filter(slot=>!slot.taken).length;
+}
+
+function bikeImageMarkup(bike,size='large'){
+  if(bike?.imageUrl){
+    return`<img class="${size==='thumb'?'list-thumb':size==='card'?'bcard-photo':'bike-photo'}" src="${bike.imageUrl}" alt="${bike.name||'Bike'}"/>`;
+  }
+  if(size==='thumb'){
+    return`<div class="list-thumb placeholder" style="background:${bike?.color||'#E3F2FD'};">${bikeSVG(bike?.stroke||'#1565C0',52,30)}</div>`;
+  }
+  if(size==='card'){
+    return`<div class="bcard-photo placeholder" style="background:${bike?.color||'#E3F2FD'};">${bikeSVG(bike?.stroke||'#1565C0',40,24)}</div>`;
+  }
+  return`<div class="bike-photo placeholder" style="background:${bike?.color||'#E3F2FD'};">${bikeSVG(bike?.stroke||'#1565C0',96,60)}</div>`;
+}
+
+function setAvatarVisual(containerId,imageUrl,initials){
+  const container=document.getElementById(containerId);
+  if(!container)return;
+  if(imageUrl){
+    container.innerHTML=`<img src="${imageUrl}" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"/>`;
+    return;
+  }
+  container.innerHTML=`<span>${initials}</span>`;
+}
+
+function formatCurrency(value){
+  return`₹${Number(value||0).toFixed(2)}`;
+}
+
+function toDateObject(value){
+  if(!value)return null;
+  if(typeof value.toDate==='function')return value.toDate();
+  if(typeof value?.seconds==='number')return new Date(value.seconds*1000);
+  if(typeof value==='string'||typeof value==='number'){const date=new Date(value);return Number.isNaN(date.getTime())?null:date;}
+  return null;
+}
+
+function compareByCreatedDesc(a,b){
+  return(toDateObject(b.createdAt)||0)-(toDateObject(a.createdAt)||0);
+}
+
+function clearLiveWatchers(){
+  liveUnsubs.forEach(unsub=>{try{unsub();}catch(e){}});
+  liveUnsubs=[];
+}
+
+function trackSnapshot(ref,onNext){
+  const unsub=onSnapshot(ref,onNext,()=>{});
+  liveUnsubs.push(unsub);
+  return unsub;
+}
+
+async function ensureBackendBootstrap(){
+  try{await apiRequest('/bootstrap',{method:'POST'});}catch(e){console.warn('Bootstrap skipped:',e?.message||e);}
+}
+
+function buildFullName(profileData,user){
+  return profileData?.fullName||user?.displayName||user?.email?.split('@')[0]||'User';
+}
+
+async function hydrateUserProfile(profileData={}){
+  const hydrated={...profileData};
+  if(profileData.photoUploadId){
+    hydrated.profileImageUrl=await getUploadDownloadUrl(profileData.photoUploadId);
+  }else if(profileData.photoURL){
+    hydrated.profileImageUrl=profileData.photoURL;
+  }else{
+    hydrated.profileImageUrl=null;
+  }
+  return hydrated;
+}
+
+function updateVerificationBadge(profileData={}){
+  const badge=document.getElementById('sf-badge-text');
+  if(!badge)return;
+  const statuses=['aadhaar','license','selfie','address'].map(type=>profileData?.kyc?.[type]?.status||'missing');
+  const verified=statuses.length&&statuses.every(status=>status==='approved');
+  badge.textContent=verified?'Verified User':'Verification pending';
+}
+
+function applyUserDocument(profileData={}){
+  if(!currentUser)return;
+  applyKycState(profileData.kyc||{});
+  updateVerificationBadge(profileData);
+  const fullName=buildFullName(profileData,currentUser);
+  const initials=fullName.split(' ').filter(Boolean).map(part=>part[0]).join('').slice(0,2).toUpperCase()||'U';
+  const avatarUrl=profileData.profileImageUrl||null;
+  currentProfileUrl=avatarUrl;
+  currentProfileUploadId=profileData.photoUploadId||null;
+  document.getElementById('sf-name').textContent=fullName;
+  document.getElementById('amh-name').textContent=fullName;
+  document.getElementById('amh-email').textContent=currentUser.email||profileData.email||'';
+  document.getElementById('prof-name').value=fullName;
+  document.getElementById('prof-display').value=profileData.displayName||currentUser.displayName||fullName;
+  document.getElementById('prof-email-inp').value=currentUser.email||profileData.email||'';
+
+  document.getElementById('prof-city').value=profileData.city||'';
+  document.getElementById('prof-phone').value=profileData.phone||'';
+  document.getElementById('ec-name').value=profileData.emergencyContact?.name||'';
+  document.getElementById('ec-phone').value=profileData.emergencyContact?.phone||'';
+  document.getElementById('ec-email').value=profileData.emergencyContact?.email||'';
+  document.getElementById('ec-relationship').value=profileData.emergencyContact?.relationship||'Family';
+
+  const settings=profileData.settings||{};
+  document.getElementById('toggle-gps').checked=settings.gps!==false;
+  document.getElementById('toggle-sms').checked=settings.sms!==false;
+  document.getElementById('toggle-sos').checked=!!settings.sos;
+  document.getElementById('toggle-dmg').checked=settings.damage_alert!==false;
+  document.getElementById('toggle-receipt').checked=settings.receipts!==false;
+
+  document.getElementById('bank-name').value=profileData.bankAccount?.holderName||'';
+  document.getElementById('bank-acc').value=profileData.bankAccount?.accountNumber||'';
+  document.getElementById('bank-ifsc').value=profileData.bankAccount?.ifsc||'';
+  document.getElementById('bank-bank').value=profileData.bankAccount?.bankName||'';
+  document.getElementById('bank-upi').value=profileData.bankAccount?.upi||'';
+
+  setAvatarVisual('avatar-media',avatarUrl,initials);
+  setAvatarVisual('sf-avatar',avatarUrl,initials);
+  setAvatarVisual('ppc-initials',avatarUrl,initials);
+
+  const listingContact=document.getElementById('listing-contact-number');
+  if(listingContact&&!listingContact.value)listingContact.value=profileData.phone||'';
+}
+
+function getBookingState(booking){
+  const createdAt=toDateObject(booking.createdAt);
+  const ageMs=createdAt?Date.now()-createdAt.getTime():0;
+  if(['cancelled','completed','done'].includes(booking.status))return'past';
+  if(booking.paymentStatus==='created'||booking.status==='pending_payment')return'upcoming';
+  if(ageMs>1000*60*60*12)return'past';
+  return'active';
+}
+
+function getDamageEstimate(severity){
+  if(severity==='severe')return{repair:4200,service:450,label:'Accident / severe damage'};
+  if(severity==='moderate')return{repair:1650,service:250,label:'Body damage / replacement'};
+  return{repair:525,service:75,label:'Minor scratch / dent'};
+}
+
+function createTxnRow(txn){
+  const icon=txn.kind==='withdrawal'
+    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6" stroke="var(--brand)" stroke-width="1.8" stroke-linecap="round"/></svg>'
+    : txn.amount<0
+      ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M17 7L7 17M7 7l10 10" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/></svg>'
+      : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H7M17 7v10" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/></svg>';
+  const bg=txn.kind==='withdrawal'?'var(--brand-s)':txn.amount<0?'var(--err-s)':'var(--green-s)';
+  const cls=txn.amount<0?'db':'cr';
+  const prefix=txn.amount<0?'-':'+';  
+  return`<div class="txn-row"><div class="txn-ic" style="background:${bg};">${icon}</div><div class="txn-info"><div class="txn-name">${txn.title}</div><div class="txn-date">${txn.meta}</div></div><div class="txn-amt ${cls}">${prefix}${formatCurrency(Math.abs(txn.amount))}</div></div>`;
+}
+
+function showBookingSuccess(bookingId,total){
+  document.getElementById('book-msg').textContent=`Your ${selBike.name} is booked for ${selBike.slots[selSlot]?.t||'selected slot'}. Meet ${selBike.owner} at the pickup location.`;
+  document.getElementById('book-id').textContent='#'+bookingId;
+  document.getElementById('book-amt').textContent='₹'+total.toFixed(2);
+  openModal('modal-book');toast('Booking confirmed! 🎉','ok');
+}
+
+function applyKycState(kycData={}){
+  ['aadhaar','license','selfie','address'].forEach((type)=>{
+    const statusEl=document.getElementById(`kyc-${type}-status`);
+    const entry=kycData?.[type];
+    if(!statusEl)return;
+    if(entry?.status==='approved'){
+      statusEl.className='kyc-status done';
+      statusEl.textContent='✓ Verified';
+    }else if(['pending_review','pending','uploaded'].includes(entry?.status)){
+      statusEl.className='kyc-status pend';
+      statusEl.textContent='⏳ Under verification';
+    }else{
+      statusEl.className='kyc-status req';
+      statusEl.textContent='✕ Not uploaded';
+    }
+  });
+}
+
+function renderBookingCard(booking,section){
+  const createdAt=toDateObject(booking.createdAt);
+  const when=createdAt?createdAt.toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):'Recently';
+  const accent=section==='active'?'var(--brand-s)':section==='upcoming'?'var(--green-s)':(booking.color||'#F3E5F5');
+  const statusClass=section==='active'?'active':section==='upcoming'?'upcoming':'done';
+  const statusLabel=section==='active'?'● Active now':section==='upcoming'?'Payment pending':'Completed';
+  const contactNumber=booking.ownerPhone||booking.contactNumber||'';
+  const actions=section==='past'
+    ? `<button class="bk-btn prim" onclick="openRatingModal('${booking.bikeName||'Ride'}','${booking.owner||'Owner'}')">⭐ Rate this ride</button><button class="bk-btn ghost" onclick="navTo('damage')">Report issue</button>`
+    : `<button class="bk-btn ghost" onclick='contactOwner(${JSON.stringify(contactNumber)},${JSON.stringify(booking.owner||"Owner")})'>📞 Contact owner</button>`;
+  return`<div class="bk-card"><div class="bk-ic" style="background:${accent};"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><ellipse cx="6" cy="17" rx="4" ry="4" stroke="#1565C0" stroke-width="2"/><ellipse cx="18" cy="17" rx="4" ry="4" stroke="#1565C0" stroke-width="2"/><path d="M6 17L10 8h4l4 9" stroke="#1565C0" stroke-width="2"/></svg></div><div class="bk-info"><div class="bk-name">${booking.bikeName||'Bike booking'}</div><div class="bk-meta">${when} · ${booking.slot||'Time slot pending'} · ${booking.owner||'Owner pending'}<br/>Booking #${booking.id} · Paid: ${formatCurrency(booking.total||0)}</div><div class="bk-status ${statusClass}">${statusLabel}</div><div class="bk-actions">${actions}</div></div></div>`;
+}
+
+function loadBookingsRealtime(){
+  if(!currentUser)return;
+  const activeEl=document.getElementById('bookings-active-list');
+  const upcomingEl=document.getElementById('bookings-upcoming-list');
+  const pastEl=document.getElementById('bookings-past-list');
+  trackSnapshot(query(collection(db,'bookings'),where('userId','==',currentUser.uid)),snap=>{
+    riderBookings=snap.docs.map(d=>({id:d.id,...d.data()})).sort(compareByCreatedDesc);
+    const active=riderBookings.filter(b=>getBookingState(b)==='active');
+    const upcoming=riderBookings.filter(b=>getBookingState(b)==='upcoming');
+    const past=riderBookings.filter(b=>getBookingState(b)==='past');
+    activeEl.innerHTML=active.length?active.map(b=>renderBookingCard(b,'active')).join(''):'<div class="card-box" style="font-size:12px;color:var(--txt2);">No active rides yet.</div>';
+    upcomingEl.innerHTML=upcoming.length?upcoming.map(b=>renderBookingCard(b,'upcoming')).join(''):'<div class="card-box" style="font-size:12px;color:var(--txt2);">No upcoming rides.</div>';
+    pastEl.innerHTML=past.length?past.map(b=>renderBookingCard(b,'past')).join(''):'<div class="card-box" style="font-size:12px;color:var(--txt2);">No past rides yet.</div>';
+    populateDamageBikeOptions();
+  });
+}
+
+function loadUserRealtime(){
+  if(!currentUser)return;
+  trackSnapshot(doc(db,'users',currentUser.uid),async snap=>{
+    const profileData=snap.exists()?snap.data():{};
+    applyUserDocument(await hydrateUserProfile(profileData));
+  });
+}
+
+function renderListings(){
+  const listEl=document.getElementById('listings-list');
+  if(!listEl)return;
+  const visibleListings=ownerListings.filter(listing=>!listing.archived);
+  if(!selectedListingId&&visibleListings[0])selectedListingId=visibleListings[0].id;
+  if(selectedListingId&&!visibleListings.some(listing=>listing.id===selectedListingId))selectedListingId=visibleListings[0]?.id||null;
+
+  if(!visibleListings.length){
+    listEl.innerHTML='<div class="card-box" style="font-size:12px;color:var(--txt2);">No bikes listed yet. Add your first bike to start earning.</div>';
+    document.getElementById('listing-schedule-title').textContent='Availability schedule';
+    return;
+  }
+
+  listEl.innerHTML=visibleListings.map(listing=>{
+    const rides=ownerBookings.filter(booking=>booking.bikeId===listing.id&&booking.paymentStatus==='captured');
+    const earned=rides.reduce((sum,booking)=>sum+Math.max((booking.price||0)-(booking.platformFee||0),0),0);
+    const schedule=listing.schedule||{};
+    const scheduleLabel=`${(schedule.days||[]).join(', ')||'Custom'} · ${schedule.from||'09:00'}-${schedule.to||'17:00'}`;
+    const activeAttr=listing.active!==false?'checked':'';
+    const selectedStyle=listing.id===selectedListingId?'box-shadow:0 0 0 1px rgba(21,101,192,.45) inset;':'';
+    const typeLabel=listing.bikeType||'Bike';
+    const regLabel=listing.regNo||'Registration pending';
+    const phoneLabel=listing.contactNumber||listing.ownerPhone||'No contact added';
+    return`<div class="list-card" style="${selectedStyle}" onclick="selectListing('${listing.id}')">${bikeImageMarkup(listing,'thumb')}<div class="list-info"><div class="list-name">${listing.name}</div><div class="list-meta">${typeLabel} · ${formatCurrency(listing.price||0)}/hr · ${rides.length} rides</div><div class="list-meta">${scheduleLabel}</div><div class="list-meta">${regLabel} · ${phoneLabel}</div><div class="list-meta">${formatCurrency(earned)} earned after platform fee</div></div><label class="tswitch" onclick="event.stopPropagation()"><input type="checkbox" ${activeAttr} onchange="toggleListing('${listing.id}',this.checked)"/><span class="tslider"></span></label><div class="list-actions"><button class="list-btn edit" onclick="event.stopPropagation();openEditListing('${listing.id}')">Edit</button><button class="list-btn del" onclick="event.stopPropagation();deleteListing('${listing.id}')">Remove</button></div></div>`;
+  }).join('');
+
+  renderListingScheduleForm();
+  populateDamageBikeOptions();
+}
+
+function renderListingScheduleForm(){
+  const listing=ownerListings.find(item=>item.id===selectedListingId&&!item.archived);
+  const title=document.getElementById('listing-schedule-title');
+  if(!listing){
+    title.textContent='Availability schedule';
+    document.querySelectorAll('#day-grid .day-btn').forEach(btn=>btn.classList.remove('on'));
+    document.getElementById('avail-from').value='09:00';
+    document.getElementById('avail-to').value='17:00';
+    document.getElementById('min-duration-select').value='1 hour';
+    document.getElementById('schedule-price-input').value='';
+    return;
+  }
+  const schedule=listing.schedule||{};
+  title.textContent=`Availability schedule — ${listing.name}`;
+  document.querySelectorAll('#day-grid .day-btn').forEach(btn=>{
+    btn.classList.toggle('on',(schedule.days||[]).includes(btn.textContent.trim()));
+  });
+  document.getElementById('avail-from').value=schedule.from||'09:00';
+  document.getElementById('avail-to').value=schedule.to||'17:00';
+  document.getElementById('min-duration-select').value=schedule.minimumDuration||'1 hour';
+  document.getElementById('schedule-price-input').value=listing.price||35;
+}
+
+function renderEarnings(){
+  const captured=ownerBookings.filter(booking=>booking.paymentStatus==='captured');
+  const credits=captured.map(booking=>{
+    const amount=Math.max((booking.price||0)-(booking.platformFee||0),0);
+    return{amount,createdAt:booking.createdAt,booking};
+  });
+  const now=new Date();
+  const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
+  const weekStart=new Date(now.getTime()-7*24*60*60*1000);
+  const totalMonth=credits.filter(item=>(toDateObject(item.createdAt)||now)>=monthStart).reduce((sum,item)=>sum+item.amount,0);
+  const thisWeek=credits.filter(item=>(toDateObject(item.createdAt)||now)>=weekStart).reduce((sum,item)=>sum+item.amount,0);
+  const withdrawn=withdrawalRequests.reduce((sum,request)=>sum+Number(request.amount||0),0);
+  const pending=Math.max(credits.reduce((sum,item)=>sum+item.amount,0)-withdrawn,0);
+
+  document.getElementById('earn-total').textContent=formatCurrency(totalMonth);
+  document.getElementById('earn-week').textContent=formatCurrency(thisWeek);
+  document.getElementById('earn-pending').textContent=formatCurrency(pending);
+  document.getElementById('earn-withdrawn').textContent=formatCurrency(withdrawn);
+  document.getElementById('earn-sub').textContent=`${captured.length} rides · 8% platform fee deducted · Powered by Razorpay`;
+  document.getElementById('withdraw-btn').textContent=`Withdraw ${formatCurrency(pending)} to bank`;
+
+  const txns=[];
+  captured.forEach(booking=>{
+    const ownerCredit=Math.max((booking.price||0)-(booking.platformFee||0),0);
+    txns.push({
+      id:`ride-${booking.id}`,
+      amount:ownerCredit,
+      title:`Ride rental — ${booking.bikeName||'Bike booking'}`,
+      meta:`${(toDateObject(booking.createdAt)||new Date()).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})} · ${booking.slot||'Slot pending'} · Renter: ${booking.userName||'Renter'}`,
+      createdAt:booking.createdAt,
+      kind:'credit'
+    });
+    if(booking.platformFee){
+      txns.push({
+        id:`fee-${booking.id}`,
+        amount:-Math.abs(Number(booking.platformFee||0)),
+        title:'Platform fee deducted',
+        meta:`${booking.bikeName||'Bike'} · 8% commission`,
+        createdAt:booking.createdAt,
+        kind:'fee'
+      });
+    }
+  });
+  withdrawalRequests.forEach(request=>{
+    const bankName=request.bankAccount?.bankName||'Bank account';
+    const accountTail=(request.bankAccount?.accountNumber||'').slice(-4);
+    txns.push({
+      id:`wd-${request.id}`,
+      amount:-Math.abs(Number(request.amount||0)),
+      title:`Withdrawal to ${bankName}${accountTail?` ****${accountTail}`:''}`,
+      meta:`${request.status||'pending'} · payout request`,
+      createdAt:request.createdAt,
+      kind:'withdrawal'
+    });
+  });
+  txns.sort((a,b)=>compareByCreatedDesc(a,b));
+  document.getElementById('txn-list').innerHTML=txns.length?txns.map(createTxnRow).join(''):'<div style="padding:14px 0;font-size:12px;color:var(--txt2);">No transactions yet. Your ride credits will appear here once someone books your bike.</div>';
+}
+
+function populateDamageBikeOptions(){
+  const select=document.getElementById('dmg-bike-sel');
+  if(!select)return;
+  const listingChoices=ownerListings.filter(listing=>!listing.archived).map(listing=>({id:listing.id,label:`${listing.name} — My listing`,ownerUid:currentUser?.uid||null,source:'listing'}));
+  const bookingChoices=riderBookings.map(booking=>({id:booking.bikeId||booking.id,label:`${booking.bikeName||'Bike'} — ${booking.slot||'Booked ride'} (${booking.owner||'Owner'})`,ownerUid:booking.ownerUid||null,source:'booking'}));
+  damageBikeChoices=[...listingChoices,...bookingChoices].filter((choice,index,array)=>choice.id&&array.findIndex(item=>item.id===choice.id&&item.source===choice.source)===index);
+  select.innerHTML='<option value="">Select the bike</option>'+damageBikeChoices.map(choice=>`<option value="${choice.id}">${choice.label}</option>`).join('');
+}
+
+function loadOwnerDataRealtime(){
+  if(!currentUser)return;
+  trackSnapshot(query(collection(db,'bikes'),where('ownerUid','==',currentUser.uid)),async snap=>{
+    ownerListings=(await Promise.all(snap.docs.map(async d=>{
+      const data=d.data();
+      return{ id:d.id,...data,imageUrl:data.photoUploadId?await getUploadDownloadUrl(data.photoUploadId):null };
+    }))).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    renderListings();
+    renderEarnings();
+  });
+  trackSnapshot(query(collection(db,'bookings'),where('ownerUid','==',currentUser.uid)),snap=>{
+    ownerBookings=snap.docs.map(d=>({id:d.id,...d.data()})).sort(compareByCreatedDesc);
+    renderListings();
+    renderEarnings();
+  });
+  trackSnapshot(query(collection(db,'withdrawal_requests'),where('userId','==',currentUser.uid)),snap=>{
+    withdrawalRequests=snap.docs.map(d=>({id:d.id,...d.data()})).sort(compareByCreatedDesc);
+    renderEarnings();
+  });
+trackSnapshot(query(collection(db,'damage_reports'),where('userId','==',currentUser.uid)),snap=>{
+    damageReports=snap.docs.map(d=>({id:d.id,...d.data()})).sort(compareByCreatedDesc);
+    if(damageReports[0])latestDamageReportId=damageReports[0].id;
+  });
+}
+
+/* ════ UTILS ════ */
+const LS=['ls-land','ls-register','ls-reg-otp','ls-set-pass','ls-otp-signin','ls-otp-sent','ls-forgot','ls-reset-sent','ls-google','ls-role'];
+function lshow(id){LS.forEach(s=>{const e=document.getElementById(s);if(e)e.className='lscreen'+(s===id?' active':'');});if(id==='ls-land'){epOpen=false;document.getElementById('ep-fields').classList.remove('open');document.getElementById('ep-chev').style.transform='';document.getElementById('ep-label').textContent='Email or Phone Number';}}
+window.toast=function(msg,type='info'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type+' show';setTimeout(()=>t.classList.remove('show'),3400);};
+function setErr(id,m){const e=document.getElementById(id);if(e)e.textContent=m;}
+function clrErr(id){setErr(id,'');}
+function setLd(ldId,btnId,on){const l=document.getElementById(ldId),b=document.getElementById(btnId);if(l)l.style.display=on?'block':'none';if(b)b.disabled=on;}
+function fmsg(c){return({'auth/email-already-in-use':'This email is already registered.','auth/invalid-email':'Invalid email address.','auth/weak-password':'Password needs 6+ characters.','auth/wrong-password':'Incorrect password.','auth/user-not-found':'No account found. Create one?','auth/too-many-requests':'Too many attempts. Please wait.','auth/invalid-credential':'Incorrect email or password.','auth/network-request-failed':'Network error.','auth/popup-closed-by-user':'Google sign-in was cancelled.'}[c]||'Something went wrong. Try again.');}
+
+/* OTP boxes */
+function initOtp(rowId){const bs=[...document.getElementById(rowId).querySelectorAll('.lob')];bs.forEach((b,i)=>{b.addEventListener('input',()=>{b.classList.toggle('fi',b.value!=='');if(b.value&&i<bs.length-1)bs[i+1].focus();});b.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!b.value&&i>0){bs[i-1].focus();bs[i-1].value='';bs[i-1].classList.remove('fi');}});b.addEventListener('paste',e=>{const d=e.clipboardData.getData('text').replace(/\D/g,'').slice(0,6);if(!d)return;e.preventDefault();[...d].forEach((ch,j)=>{if(bs[j]){bs[j].value=ch;bs[j].classList.add('fi');}});bs[Math.min(d.length,bs.length-1)].focus();});});}
+function getOtp(rowId){return[...document.getElementById(rowId).querySelectorAll('.lob')].map(b=>b.value).join('');}
+function clrOtp(rowId){document.getElementById(rowId).querySelectorAll('.lob').forEach(b=>{b.value='';b.classList.remove('fi');});}
+
+/* Timer */
+const _t={};
+function startTimer(id,s=120){if(_t[id])clearInterval(_t[id]);let r=s;const tick=()=>{const el=document.getElementById(id);if(!el)return;const m=Math.floor(r/60),sec=r%60;el.textContent=`${m}:${sec<10?'0':''}${sec}`;if(r===0){clearInterval(_t[id]);el.textContent='Expired';}r--;};tick();_t[id]=setInterval(tick,1000);}
+
+/* Slide / eye */
+let epOpen=false;
+document.getElementById('ep-toggle').addEventListener('click',()=>{epOpen=!epOpen;document.getElementById('ep-fields').classList.toggle('open',epOpen);document.getElementById('ep-chev').style.transform=epOpen?'rotate(180deg)':'';document.getElementById('ep-label').textContent=epOpen?'Hide':'Email or Phone Number';});
+document.getElementById('eye-main').addEventListener('click',()=>{const e=document.getElementById('pass-inp');e.type=e.type==='password'?'text':'password';});
+
+window.toggleP=id=>{const e=document.getElementById(id);if(e)e.type=e.type==='password'?'text':'password';};
+window.chkStr=v=>{let s=0;if(v.length>=8)s++;if(/[A-Z]/.test(v)&&/[0-9]/.test(v))s++;if(/[^A-Za-z0-9]/.test(v))s++;const cl=['','w','m','s'],ms=['Enter a password to see strength','Weak','Medium — add a symbol','Strong ✓'];[1,2,3].forEach(i=>{const e=document.getElementById('sb'+i);if(e)e.className='lsb'+(s>=i?' '+cl[s]:'');});const h=document.getElementById('pw-hint');if(h)h.textContent=v.length?ms[s]:ms[0];};
+window.pickRole=(a,b)=>{document.getElementById(a).className='lrole sel';document.getElementById(b).className='lrole';};
+
+/* ════ ENTER APP ════ */
+async function enterApp(user){
+  currentUser=user;
+  document.getElementById('page-login').style.display='none';
+  document.getElementById('page-app').style.display='flex';
+  let profileData={};
+  try{
+    const ud=await getDoc(doc(db,'users',user.uid));
+    if(ud.exists())profileData=ud.data();
+  }catch(e){}
+
+  try{
+    await setDoc(doc(db,'users',user.uid),{email:user.email||'',displayName:profileData.displayName||user.displayName||'',fullName:profileData.fullName||user.displayName||user.email?.split('@')[0]||'User',uid:user.uid,createdAt:serverTimestamp()},{merge:true});
+  }catch(e){}
+
+  applyUserDocument(await hydrateUserProfile(profileData));
+  toast(`Welcome, ${buildFullName(profileData,user).split(' ')[0]}! 🎉`,'ok');
+  initApp();
+}
+
+/* ════ AUTH STATE ════ */
+onAuthStateChanged(auth,user=>{
+  if(user){
+    const cur=LS.find(s=>document.getElementById(s)?.classList.contains('active'));
+    if(!['ls-google','ls-role','ls-set-pass'].includes(cur))enterApp(user);
+  }
+});
+
+/* ════ AUTH FLOWS ════ */
+document.getElementById('btn-google').addEventListener('click',async()=>{try{await signInWithPopup(auth,new GoogleAuthProvider());lshow('ls-google');}catch(e){toast(fmsg(e.code),'fail');}});
+document.getElementById('btn-google-go').addEventListener('click',()=>{if(auth.currentUser)enterApp(auth.currentUser);});
+document.getElementById('btn-email-signin').addEventListener('click',async()=>{
+  const email=document.getElementById('cred-inp').value.trim(),pass=document.getElementById('pass-inp').value;
+  clrErr('err-signin');if(!email){setErr('err-signin','Please enter your email.');return;}if(!pass){setErr('err-signin','Please enter your password.');return;}
+  setLd('ld-signin','btn-email-signin',true);
+  try{await signInWithEmailAndPassword(auth,email,pass);enterApp(auth.currentUser);}catch(e){setErr('err-signin',fmsg(e.code));}
+  finally{setLd('ld-signin','btn-email-signin',false);}
+});
+document.getElementById('btn-goto-otp').addEventListener('click',()=>{const e=document.getElementById('cred-inp').value.trim();if(e)document.getElementById('otp-email').value=e;lshow('ls-otp-signin');});
+document.getElementById('btn-send-otp-link').addEventListener('click',async()=>{
+  const email=document.getElementById('otp-email').value.trim();clrErr('err-otp');if(!email){setErr('err-otp','Enter your email.');return;}
+  setLd('ld-otp','btn-send-otp-link',true);
+  try{await sendSignInLinkToEmail(auth,email,{url:window.location.href,handleCodeInApp:true});localStorage.setItem('emailForSignIn',email);document.getElementById('otp-sent-dest').textContent=email;lshow('ls-otp-sent');toast('Sign-in link sent!','ok');}
+  catch(e){setErr('err-otp',fmsg(e.code));}finally{setLd('ld-otp','btn-send-otp-link',false);}
+});
+document.getElementById('btn-back-otp-sent').addEventListener('click',()=>lshow('ls-land'));
+document.getElementById('back-otp').addEventListener('click',()=>lshow('ls-land'));
+if(isSignInWithEmailLink(auth,window.location.href)){let email=localStorage.getItem('emailForSignIn')||prompt('Confirm your email:');if(email){signInWithEmailLink(auth,email,window.location.href).then(()=>{localStorage.removeItem('emailForSignIn');history.replaceState({},document.title,location.pathname);enterApp(auth.currentUser);}).catch(e=>toast(fmsg(e.code),'fail'));}}
+document.getElementById('btn-forgot-lnk').addEventListener('click',()=>{const e=document.getElementById('cred-inp').value.trim();if(e)document.getElementById('forgot-email').value=e;lshow('ls-forgot');});
+document.getElementById('btn-send-reset').addEventListener('click',async()=>{
+  const email=document.getElementById('forgot-email').value.trim();clrErr('err-forgot');if(!email){setErr('err-forgot','Enter your email.');return;}
+  setLd('ld-forgot','btn-send-reset',true);
+  try{await sendPasswordResetEmail(auth,email);document.getElementById('reset-dest').textContent=email;lshow('ls-reset-sent');toast('Reset link sent!','ok');}
+  catch(e){setErr('err-forgot',fmsg(e.code));}finally{setLd('ld-forgot','btn-send-reset',false);}
+});
+document.getElementById('btn-back-reset').addEventListener('click',()=>lshow('ls-land'));
+document.getElementById('back-forgot').addEventListener('click',()=>lshow('ls-land'));
+let pending={name:'',email:'',tmp:''};
+document.getElementById('btn-goto-reg').addEventListener('click',()=>lshow('ls-register'));
+document.getElementById('back-reg').addEventListener('click',()=>lshow('ls-land'));
+document.getElementById('back-reg-otp').addEventListener('click',()=>lshow('ls-register'));
+document.getElementById('btn-send-reg').addEventListener('click',async()=>{
+  const name=document.getElementById('reg-name').value.trim(),email=document.getElementById('reg-email').value.trim();clrErr('err-reg');
+  if(!name){setErr('err-reg','Enter your name.');return;}if(!email){setErr('err-reg','Enter your email.');return;}
+  setLd('ld-reg','btn-send-reg',true);
+  try{const tmp='RS!'+Math.random().toString(36).slice(2,10);const c=await createUserWithEmailAndPassword(auth,email,tmp);await updateProfile(c.user,{displayName:name});await sendEmailVerification(c.user);pending={name,email,tmp};document.getElementById('reg-dest').textContent=email;await signOut(auth);lshow('ls-reg-otp');startTimer('t-reg');initOtp('reg-otp-row');toast('Verification email sent!','ok');}
+  catch(e){setErr('err-reg',fmsg(e.code));}finally{setLd('ld-reg','btn-send-reg',false);}
+});
+document.getElementById('btn-verify-reg').addEventListener('click',()=>{const c=getOtp('reg-otp-row');clrErr('err-reg-otp');if(c.length<6){setErr('err-reg-otp','Enter all 6 digits.');return;}lshow('ls-set-pass');toast('Verified! Set your password.','ok');});
+document.getElementById('btn-resend-reg').addEventListener('click',async()=>{clrOtp('reg-otp-row');startTimer('t-reg');try{const c=await signInWithEmailAndPassword(auth,pending.email,pending.tmp);await sendEmailVerification(c.user);await signOut(auth);toast('Email resent!','ok');}catch{toast('Could not resend.','fail');}});
+document.getElementById('sp1').addEventListener('input',function(){window.chkStr(this.value);});
+document.getElementById('btn-set-pass').addEventListener('click',async()=>{
+  const p1=document.getElementById('sp1').value,p2=document.getElementById('sp2').value;clrErr('err-set-pass');
+  if(p1.length<8){setErr('err-set-pass','Min. 8 characters.');return;}if(p1!==p2){setErr('err-set-pass','Passwords do not match.');return;}
+  setLd('ld-set-pass','btn-set-pass',true);
+  try{const c=await signInWithEmailAndPassword(auth,pending.email,pending.tmp);const{updatePassword}=await import('https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js');await updatePassword(c.user,p1);lshow('ls-role');}
+  catch(e){setErr('err-set-pass',fmsg(e.code));}finally{setLd('ld-set-pass','btn-set-pass',false);}
+});
+document.getElementById('btn-skip-pass').addEventListener('click',()=>lshow('ls-role'));
+document.getElementById('btn-role-go').addEventListener('click',()=>{if(auth.currentUser)enterApp(auth.currentUser);});
+window.doSignOut=async()=>{clearLiveWatchers();ownerListings=[];riderBookings=[];ownerBookings=[];withdrawalRequests=[];damageReports=[];damageBikeChoices=[];selectedListingId=null;await signOut(auth);document.getElementById('page-app').style.display='none';document.getElementById('page-login').style.display='flex';lshow('ls-land');toast('Signed out.');};
+
+/* ════ APP INIT ════ */
+async function initApp(){
+  clearLiveWatchers();
+  initMap();
+  loadUserRealtime();
+  loadBikesRealtime();
+  loadBookingsRealtime();
+  loadOwnerDataRealtime();
+  locateUser();
+}
+
+/* ════ MAP ════ */
+function initMap(){
+  if(leafMap)return;
+  leafMap=L.map('map',{zoomControl:true,attributionControl:false}).setView([12.8970,80.0040],15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(leafMap);
+  setTimeout(()=>leafMap.invalidateSize(),200);
+}
+
+window.toggleMapPanel=function(forceState){
+  const container=document.getElementById('map-container');
+  if(!container)return;
+  mapExpanded=typeof forceState==='boolean'?forceState:!mapExpanded;
+  container.classList.toggle('expanded',mapExpanded);
+  container.classList.toggle('collapsed',!mapExpanded);
+  document.getElementById('map-toggle-btn').textContent=mapExpanded?'Hide map':'Open map';
+  setTimeout(()=>leafMap?.invalidateSize(),260);
+};
+
+window.locateUser=function(){
+  if(!navigator.geolocation){document.getElementById('location-txt').textContent='Chennai';return;}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const{latitude:lat,longitude:lng}=pos.coords;
+    currentCoords={lat,lng};
+    if(leafMap)leafMap.setView([lat,lng],15);
+    if(userMarker)leafMap.removeLayer(userMarker);
+    userMarker=L.circleMarker([lat,lng],{radius:9,fillColor:'#1565C0',color:'#fff',weight:3,fillOpacity:1}).addTo(leafMap).bindPopup('<strong>📍 You are here</strong>').openPopup();
+    /* Reverse geocode */
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`).then(r=>r.json()).then(d=>{const area=d.address?.suburb||d.address?.neighbourhood||d.address?.town||d.address?.city||'Your location';document.getElementById('location-txt').textContent=area;document.getElementById('view-sub').textContent=`${area} · ${bikeData.length} live bikes nearby`;renderBikeList(curFilter);if(selBike)selectBike(selBike.id);}).catch(()=>{document.getElementById('location-txt').textContent='Chennai';renderBikeList(curFilter);if(selBike)selectBike(selBike.id);});
+  },()=>{document.getElementById('location-txt').textContent='Chennai';if(leafMap)leafMap.setView([12.8970,80.0040],15);renderBikeList(curFilter);if(selBike)selectBike(selBike.id);});
+};
+
+/* ════ FIRESTORE: BIKES ════ */
+function loadBikesRealtime(){
+  trackSnapshot(collection(db,'bikes'),async snap=>{
+    const liveListings=snap.docs.map(d=>({...d.data(),id:d.id}))
+      .filter(b=>!b.archived&&b.active!==false&&b.avail!==false&&b.approved!==false&&b.ownerUid!==currentUser?.uid&&openSlotCount(b)>0);
+    bikeData=await Promise.all(liveListings.map(async bike=>({...bike,imageUrl:bike.photoUploadId?await getUploadDownloadUrl(bike.photoUploadId):null})));
+    if(selBike&&!bikeData.some(b=>b.id===selBike.id))selBike=null;
+    renderBikeList(curFilter);
+    renderBikeMarkers();
+    updateStats();
+    if(selBike)selectBike(selBike.id);
+  });
+}
+
+function getBikeIcon(b){
+  const clr=b.avail?'#22c55e':'#ef4444';
+  return L.divIcon({html:`<div style="background:${b.color||'#E3F2FD'};width:38px;height:28px;border-radius:8px;border:2.5px solid ${b.stroke||'#1565C0'};display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);"><svg width="24" height="16" viewBox="0 0 100 60" fill="none"><ellipse cx="18" cy="46" rx="13" ry="13" stroke="${b.stroke||'#1565C0'}" stroke-width="4"/><ellipse cx="82" cy="46" rx="13" ry="13" stroke="${b.stroke||'#1565C0'}" stroke-width="4"/><path d="M18 46L36 18h28l18 28" stroke="${b.stroke||'#1565C0'}" stroke-width="4"/></svg></div><div style="width:8px;height:8px;border-radius:50%;background:${clr};border:2px solid #fff;margin:-4px auto 0;"></div>`,className:'',iconSize:[38,38],iconAnchor:[19,38]});
+}
+
+function renderBikeMarkers(){
+  if(!leafMap)return;
+  Object.values(bikeMarkers).forEach(m=>leafMap.removeLayer(m));
+  bikeMarkers={};
+  bikeData.forEach(b=>{
+    if(!b.lat||!b.lng)return;
+    const distanceText=formatDistance(bikeDistanceKm(b));
+    const availableSlots=openSlotCount(b);
+    const ratingMarkup=getPopupRatingMarkup(b);
+    const m=L.marker([b.lat,b.lng],{icon:getBikeIcon(b)}).addTo(leafMap);
+    m.bindPopup(`<div class="bike-popup"><strong>${b.name}</strong><br/>${b.owner||'Owner'} · ${b.bikeType||'Bike'}<br/><span class="popup-price">₹${b.price}/hr</span> &nbsp; ${ratingMarkup}<br/><span style="color:#166534;font-weight:700;">● ${availableSlots} open slot${availableSlots===1?'':'s'}</span><br/>${distanceText} away<br/><button class="popup-select-btn" onclick="selectBike('${b.id}')">Select &amp; book</button></div>`,{maxWidth:220});
+    bikeMarkers[b.id]=m;
+  });
+}
+
+function updateStats(){
+  const avail=bikeData.filter(b=>openSlotCount(b)>0&&b.active!==false&&b.avail!==false);
+  document.getElementById('stat-avail').textContent=avail.length;
+  document.getElementById('stat-avg').textContent=avail.length?'₹'+Math.round(avail.reduce((s,b)=>s+b.price,0)/avail.length):'₹0';
+  const allRatings=bikeData.map(getBikeAverageRating).filter(rating=>rating!==null);
+  document.getElementById('stat-rating').textContent=allRatings.length?(allRatings.reduce((s,rating)=>s+rating,0)/allRatings.length).toFixed(1)+'★':'Not rated';
+  const total=bikeData.reduce((s,b)=>s+getBikeReviewCount(b),0);
+  document.getElementById('stat-rides').textContent=total;
+  document.getElementById('bc-count').textContent=`${avail.length} available`;
+  if(!selBike){
+    document.getElementById('selected-distance').textContent=avail.length?'Choose a bike':'No live bikes';
+    document.getElementById('selected-distance-sub').textContent=avail.length?'Distance and open slots will appear here':'Listings will appear here as owners publish availability.';
+  }
+}
+
+/* ════ BIKE LIST ════ */
+window.filterBikes=function(q){curSearch=q;renderBikeList(curFilter);};
+window.setFilter=function(f,el){curFilter=f;document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('on'));el.classList.add('on');renderBikeList(f);};
+
+function renderBikeList(filter){
+  let list=bikeData.filter(b=>{
+    if(curSearch&&!b.name?.toLowerCase().includes(curSearch.toLowerCase())&&!b.owner?.toLowerCase().includes(curSearch.toLowerCase()))return false;
+    if(filter==='available')return openSlotCount(b)>0;
+    if(filter==='cheap')return b.price<30;
+    if(filter==='top')return(getBikeAverageRating(b)??0)>=4.5;
+    return true;
+  });
+  list=list.sort((a,b)=>{
+    const distanceDiff=(bikeDistanceKm(a)??999)-(bikeDistanceKm(b)??999);
+    if(Math.abs(distanceDiff)>0.05)return distanceDiff;
+    return (a.price||0)-(b.price||0);
+  });
+  const g=document.getElementById('bike-list-inner');
+  if(!g)return;
+  if(!list.length){
+    g.innerHTML='<div style="padding:20px;text-align:center;color:var(--txt2);font-size:12px;">No live bikes match your filter right now.</div>';
+    if(!selBike){
+      document.getElementById('selected-distance').textContent='No live bikes';
+      document.getElementById('selected-distance-sub').textContent='Try again in a bit or switch filters when owners publish more slots.';
+    }
+    return;
+  }
+  g.innerHTML=list.map(b=>{
+    const distanceText=formatDistance(bikeDistanceKm(b));
+    const openSlots=openSlotCount(b);
+    return`<div class="bcard${selBike?.id===b.id?' sel':''}" onclick="selectBike('${b.id}')"><div class="bcard-img">${bikeImageMarkup(b,'card')}</div><div class="bcard-info"><div class="bc-name">${b.name}</div><div class="bc-owner">${b.owner||'Owner'} · ${distanceText} away · ${openSlots} slot${openSlots===1?'':'s'} open</div><div class="bc-footer"><div class="bc-price">₹${b.price}/hr</div><div class="bc-stars">${getRatingMarkup(b,10)}</div></div><div class="bc-badge free">${b.bikeType||'Bike'} ready</div></div></div>`;
+  }).join('');
+}
+
+function bikeSVG(stroke,w,h){return`<svg width="${w}" height="${h}" viewBox="0 0 100 60" fill="none"><ellipse cx="18" cy="46" rx="13" ry="13" stroke="${stroke}" stroke-width="3"/><ellipse cx="82" cy="46" rx="13" ry="13" stroke="${stroke}" stroke-width="3"/><path d="M18 46L36 18h28l18 28" stroke="${stroke}" stroke-width="3"/><path d="M36 18L32 46M60 18l6-10h16" stroke="${stroke}" stroke-width="2.5" stroke-linecap="round"/></svg>`;}
+function renderStars(rating,sz=11){
+  const safeRating=Math.max(0,Math.min(5,Number(rating)||0));
+  const full=Math.floor(safeRating);
+  const empty=5-full;
+  return'<span class="bc-star" style="font-size:'+sz+'px;">★</span>'.repeat(full)+'<span class="bc-star" style="font-size:'+sz+'px;color:var(--bdr2);">☆</span>'.repeat(empty);
+}
+
+/* ════ SELECT BIKE ════ */
+window.selectBike=async function(id){
+  selBike=bikeData.find(b=>b.id===id);if(!selBike)return;
+  selSlot=selBike.slots?.findIndex(s=>!s.taken)??0;if(selSlot<0)selSlot=0;
+  renderBikeList(curFilter);
+  
+  /* Fly map to bike */
+  if(leafMap&&selBike.lat&&selBike.lng){leafMap.flyTo([selBike.lat,selBike.lng],16,{duration:1});bikeMarkers[id]?.openPopup();}
+
+  /* Load real-time reviews from Firestore */
+  let reviews=[];
+  try{const qs=await getDocs(query(collection(db,'bikes',id,'reviews'),orderBy('createdAt','desc')));reviews=qs.docs.map(d=>d.data());}catch(e){}
+  
+  const storedRating=getBikeAverageRating(selBike);
+  const avgRating=reviews.length?reviews.reduce((s,r)=>s+(r.rating||0),0)/reviews.length:storedRating;
+  const revCount=reviews.length||getBikeReviewCount(selBike);
+  const lastReview=reviews[0];
+
+  const conds=(selBike.conds||[]).map(c=>`<span class="ctag">${c}</span>`).join('');
+  const warns=(selBike.warn||[]).map(w=>`<span class="ctag warn">${w}</span>`).join('');
+  const price=selBike.price;
+  const fee=(price*0.08).toFixed(2);
+  const total=(price+parseFloat(fee)).toFixed(2);
+  const distanceKm=bikeDistanceKm(selBike);
+  const distanceText=formatDistance(distanceKm);
+  const contactNumber=selBike.contactNumber||selBike.ownerPhone||'';
+  const openSlots=openSlotCount(selBike);
+  selSlot=selBike.slots?.findIndex(s=>!s.taken)??0;
+  
+  document.getElementById('bp-title').textContent=selBike.name;
+  document.getElementById('bp-sub').textContent=`${selBike.owner||'Owner'} · ${selBike.bikeType||'Bike'} · ${distanceText} away`;
+  document.getElementById('selected-distance').textContent=distanceText;
+  document.getElementById('selected-distance-sub').textContent=`${openSlots} open slot${openSlots===1?'':'s'} today · ${selBike.bikeType||'Bike'} · ${formatCurrency(selBike.price||0)}/hr`;
+  
+  document.getElementById('bpb-content').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;align-items:center;">
+      ${bikeImageMarkup(selBike)}
+      <div class="card-box" style="padding:16px;">
+        <div class="psec">Owner and bike details</div>
+        <div class="sumrow"><span>Owner</span><span>${selBike.owner||'Owner'}</span></div>
+        <div class="sumrow"><span>Bike type</span><span>${selBike.bikeType||'Bike'}</span></div>
+        <div class="sumrow"><span>Availability</span><span>${openSlots} open slot${openSlots===1?'':'s'}</span></div>
+        <div class="sumrow"><span>Distance from you</span><span>${distanceText}</span></div>
+        <div class="sumrow"><span>Registration</span><span>${selBike.regNo||'Shared after verification'}</span></div>
+        <div class="sumrow"><span>Contact</span><span>${contactNumber||'Shown after booking'}</span></div>
+      </div>
+    </div>
+    <div><div class="psec">Real-time rating</div>
+      <div class="rt-stars">${avgRating===null?'<span class="rt-count">Not rated yet</span>':`${[1,2,3,4,5].map(i=>`<span class="rt-star${i<=Math.round(avgRating)?' on':''}">★</span>`).join('')}<span class="rt-avg">${avgRating.toFixed(1)}</span><span class="rt-count"> (${revCount} reviews)</span>`}</div>
+      ${lastReview?`<div class="review-txt">"${lastReview.text||'Good ride.'}" — ${lastReview.renterName||'Renter'}, ${lastReview.date||'recently'}</div>`:''}
+    </div>
+    <div><div class="psec">Bike condition</div><div class="ctagrow">${conds}${warns}</div></div>
+    <div><div class="psec">Location on map</div><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;"><div style="font-size:11px;color:var(--txt2);">📍 ${distanceText} from you · Pin synced with live map</div><button class="workspace-btn" type="button" onclick="toggleMapPanel(true)">Open live map</button></div></div>
+    <div><div class="psec">Pick a time slot</div><div class="slotgrid">${(selBike.slots||[]).map((s,i)=>`<div class="slot${s.taken?' taken':i===selSlot?' on':''}" onclick="${s.taken?'':'appSelSlot('+i+')'}">${s.t}</div>`).join('')}</div></div>
+    <div><div class="psec">Pay with</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div class="payopt on" onclick="selPay(this)"><div class="payic" style="background:#E3F2FD;color:#1565C0;">G</div><span class="paylbl">Google Pay (GPay)</span></div>
+        <div class="payopt" onclick="selPay(this)"><div class="payic" style="background:var(--green-s);color:#166534;">CC</div><span class="paylbl">Credit / Debit card</span></div>
+        <div class="payopt" onclick="selPay(this)"><div class="payic" style="background:var(--warn-s);color:#7B5800;">₹</div><span class="paylbl">Cash on pickup</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="psec">Summary</div>
+      <div class="sumrow"><span>₹${price} × 1 hour</span><span>₹${price}.00</span></div>
+      <div class="sumrow"><span>Platform fee (8%)</span><span>₹${fee}</span></div>
+      <div class="sumrow tot"><span>Total</span><span>₹${total}</span></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      ${contactNumber?`<button class="lbtnout" type="button" style="flex:1 1 180px;margin:0;" onclick='contactOwner(${JSON.stringify(contactNumber)},${JSON.stringify(selBike.owner||"Owner")})'>Call owner</button>`:''}
+      ${selBike.avail?`<button class="bookbtn" style="flex:1 1 220px;" onclick="confirmBooking()">Confirm booking · ₹${total}</button>`:'<div style="text-align:center;padding:10px;font-size:12px;color:var(--err);font-weight:600;">⚠ This bike is not available right now</div>'}
+    </div>
+    <div style="font-size:10px;color:var(--txt3);text-align:center;">Secured by Razorpay · 8% platform fee applied</div>
+  `;
+};
+
+window.appSelSlot=function(i){selSlot=i;selectBike(selBike.id);};
+window.selPay=function(el){document.querySelectorAll('.payopt').forEach(p=>p.classList.remove('on'));el.classList.add('on');};
+
+/* ════ BOOKING ════ */
+window.confirmBooking=async function(){
+  if(!selBike||!currentUser){toast('Please sign in first','fail');return;}
+  if(!selBike.avail){toast('Bike not available','fail');return;}
+  const slot=selBike.slots[selSlot]?.t;
+  if(!slot){toast('Please choose a valid slot','fail');return;}
+  try{
+    const{data:orderData}=await createBookingOrderFn({bikeId:selBike.id,slot});
+    if(typeof Razorpay!=='function')throw new Error('Razorpay checkout is not available.');
+    const rzp=new Razorpay({
+      key:orderData.keyId,
+      order_id:orderData.orderId,
+      amount:orderData.amount,
+      currency:orderData.currency,
+      name:'RideShare',
+      description:`Rent ${selBike.name} — 1 hour`,
+      prefill:{email:currentUser.email,name:currentUser.displayName||''},
+      theme:{color:'#1565C0'},
+      handler:async function(resp){
+        await verifyBookingPaymentFn({bookingId:orderData.bookingId,orderId:resp.razorpay_order_id,paymentId:resp.razorpay_payment_id,signature:resp.razorpay_signature});
+        showBookingSuccess(orderData.bookingId,Number(orderData.total));
+      }
+    });
+    rzp.on('payment.failed',()=>toast('Payment failed. Please try again.','fail'));
+    rzp.open();
+  }catch(e){toast(e?.message||'Unable to start booking payment.','fail');}
+};
+
+/* ════ RATING SYSTEM ════ */
+window.openRatingModal=function(bikeName,owner){selStar=4;document.getElementById('rate-bike-name').textContent=bikeName;setStars(4);openModal('modal-rating');};
+window.setStars=function(n){selStar=n;document.querySelectorAll('.mstar').forEach((s,i)=>s.className='mstar'+(i<n?' lit':''));};
+window.toggleCondTag=function(el){el.classList.toggle('warn');};
+window.submitRating=async function(){
+  const text=document.getElementById('review-text').value.trim();
+  const reviewData={rating:selStar,text:text||'Good ride.',renterName:currentUser?.displayName||'Anonymous',date:new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'}),userId:currentUser?.uid,createdAt:serverTimestamp()};
+  try{
+    const targetId=selBike?.id||'bike1';
+    await addDoc(collection(db,'bikes',targetId,'reviews'),reviewData);
+    const qs=await getDocs(collection(db,'bikes',targetId,'reviews'));
+    const reviews=qs.docs.map(d=>d.data());
+    const avgRating=reviews.reduce((s,r)=>s+(r.rating||0),0)/reviews.length;
+    bikeData=bikeData.map(b=>b.id===targetId?{...b,rating:parseFloat(avgRating.toFixed(1)),reviewCount:reviews.length}:b);
+    renderBikeList(curFilter);
+    renderBikeMarkers();
+    updateStats();
+    toast('Rating submitted! ⭐','ok');
+  }catch(e){toast('Rating saved locally','ok');}
+  closeModal('modal-rating');
+};
+
+/* ════ NAV ════ */
+const VIEW_TITLES={browse:'Browse bikes',bookings:'My bookings',kyc:'KYC & Safety',damage:'Damage report',listings:'My listings',earnings:'Earnings'};
+const VIEW_SUBS={browse:'Real-time map of nearby bikes',bookings:'Manage your active and past rides',kyc:'Identity verification & safety settings',damage:'Report &amp; resolve vehicle damage',listings:'Manage your listed bikes &amp; schedules',earnings:'Your earnings &amp; Razorpay transactions'};
+const FILTER_VIEWS=['browse'];
+window.navTo=function(v){
+  ['browse','bookings','kyc','damage','listings','earnings'].forEach(x=>{const el=document.getElementById('view-'+x);if(el)el.className='view'+(x===v?' active':'');});
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('on'));
+  const ni=document.getElementById('nav-'+v);if(ni)ni.classList.add('on');
+  document.getElementById('view-title').textContent=VIEW_TITLES[v]||v;
+  document.getElementById('view-sub').innerHTML=VIEW_SUBS[v]||'';
+  document.getElementById('filter-row').style.display=FILTER_VIEWS.includes(v)?'flex':'none';
+  if(v==='browse'){setTimeout(()=>leafMap?.invalidateSize(),100);}
+};
+window.switchRole=function(r){
+  document.getElementById('role-rent').className='rbtn'+(r==='rent'?' on':'');
+  document.getElementById('role-list').className='rbtn'+(r==='list'?' on':'');
+  navTo(r==='list'?'listings':'browse');
+};
+
+/* ════ MODALS ════ */
+window.openModal=id=>{document.getElementById(id)?.classList.add('show');};
+window.closeModal=id=>{document.getElementById(id)?.classList.remove('show');};
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show');}));
+window.toggleAvatarMenu=function(event){
+  event?.stopPropagation?.();
+  document.getElementById('avatar-menu').classList.toggle('show');
+};
+window.closeAvatarMenu=function(){document.getElementById('avatar-menu').classList.remove('show');};
+document.addEventListener('click',e=>{const m=document.getElementById('avatar-menu');if(m&&!e.target.closest('.tavatar'))m.classList.remove('show');});
+
+/* ════ PROFILE ════ */
+window.saveProfile=async function(){
+  const name=document.getElementById('prof-name').value.trim();
+  const display=document.getElementById('prof-display').value.trim()||name;
+  const phone=document.getElementById('prof-phone').value.trim();
+  const city=document.getElementById('prof-city').value.trim();
+  if(!name){toast('Please enter your name','fail');return;}
+  try{
+    await updateProfile(auth.currentUser,{displayName:display});
+    await setDoc(doc(db,'users',currentUser.uid),{fullName:name,displayName:display,phone,city},{merge:true});
+    document.getElementById('sf-name').textContent=name;
+    document.getElementById('amh-name').textContent=name;
+    toast('Profile updated! ✓','ok');closeModal('modal-profile');
+  }catch(e){toast('Update failed','fail');}
+};
+
+window.uploadProfilePic=async function(input){
+  if(!input.files[0])return;
+  const file=input.files[0];
+  if(file.size>5*1024*1024){toast('File too large (max 5MB)','fail');return;}
+  if(!['image/jpeg','image/png','image/webp'].includes(file.type)){toast('Upload JPG, PNG, or WEBP only','fail');return;}
+  if(!currentUser){toast('Please sign in first','fail');return;}
+  toast('Uploading photo...','info');
+  try{
+    const uploaded=await uploadPrivateFile(file,'profile','profile_photo');
+    currentProfileUploadId=uploaded.uploadId;
+    uploadUrlCache.delete(uploaded.uploadId);
+    const userSnap=await getDoc(doc(db,'users',currentUser.uid));
+    const hydrated=await hydrateUserProfile({...userSnap.data(),photoUploadId:uploaded.uploadId});
+    applyUserDocument(hydrated);
+    input.value='';
+    toast('Profile photo updated! ✓','ok');
+  }catch(e){toast(e?.message||'Profile upload failed.','fail');}
+};
+
+window.previewListingPhoto=function(input){
+  const file=input.files?.[0];
+  const preview=document.getElementById('listing-photo-preview');
+  if(!file){
+    preview.hidden=true;
+    return;
+  }
+  if(listingPhotoPreviewUrl)URL.revokeObjectURL(listingPhotoPreviewUrl);
+  listingPhotoPreviewUrl=URL.createObjectURL(file);
+  document.getElementById('listing-photo-thumb').src=listingPhotoPreviewUrl;
+  document.getElementById('listing-photo-name').textContent=file.name;
+  document.getElementById('listing-photo-sub').textContent=`${file.type||'Image'} · ${formatFileSize(file.size)}`;
+  preview.hidden=false;
+};
+
+window.clearListingPhoto=function(){
+  const input=document.getElementById('listing-bike-photo');
+  if(input)input.value='';
+  if(listingPhotoPreviewUrl){
+    URL.revokeObjectURL(listingPhotoPreviewUrl);
+    listingPhotoPreviewUrl=null;
+  }
+  document.getElementById('listing-photo-preview').hidden=true;
+};
+
+/* ════ KYC ════ */
+window.handleKycUpload=async function(input,type){
+  if(!input.files[0])return;
+  const file=input.files[0];
+  if(file.size>5*1024*1024){toast('File too large (max 5MB)','fail');return;}
+  if(!currentUser){toast('Please sign in first','fail');return;}
+  toast(`Uploading ${type} document...`,'info');
+  const statusEl=document.getElementById(`kyc-${type}-status`);
+  try{
+    await uploadPrivateFile(file,'kyc',type);
+    if(statusEl){statusEl.className='kyc-status pend';statusEl.textContent='⏳ Under verification';}
+    toast(`${type} uploaded! Under manual review (24–48 hrs).`,'ok');
+  }catch(e){toast(e?.message||'Upload failed. Please try again.','fail');}
+};
+
+window.saveEmergencyContact=async function(){
+  const name=document.getElementById('ec-name').value.trim();
+  const phone=document.getElementById('ec-phone').value.trim();
+  const email=document.getElementById('ec-email').value.trim();
+  const relationship=document.getElementById('ec-relationship').value;
+  if(!name||!phone){toast('Please enter name and phone','fail');return;}
+  try{
+    await setDoc(doc(db,'users',currentUser.uid),{emergencyContact:{name,phone,email,relationship}},{merge:true});
+    toast('Emergency contact saved! ✓','ok');
+  }catch(e){toast('Saved locally','ok');}
+};
+
+window.saveToggle=async function(key,val){
+  try{await setDoc(doc(db,'users',currentUser.uid),{settings:{[key]:val}},{merge:true});}catch(e){}
+  toast(`${key.replace('_',' ')} ${val?'enabled':'disabled'}`,'info');
+};
+
+/* ════ DAMAGE REPORT ════ */
+window.setSev=function(sev){
+  dmgSeverity=sev;
+  ['minor','moderate','severe'].forEach(s=>{const el=document.getElementById('sev-'+s);if(el)el.className='sev-opt'+(s===sev?sev==='minor'?' on':sev==='moderate'?' won':' eon':'');});
+};
+
+function renderDamagePhotoPreview(){
+  dmgPhotoPreviewUrls.forEach(url=>URL.revokeObjectURL(url));
+  dmgPhotoPreviewUrls=dmgPhotos.map(file=>URL.createObjectURL(file));
+  const prev=document.getElementById('dmg-preview');
+  prev.innerHTML=dmgPhotos.map((file,index)=>`<div class="photo-thumb-wrap"><img class="photo-thumb" src="${dmgPhotoPreviewUrls[index]}" alt="Damage photo ${index+1}"/><button class="photo-thumb-remove" type="button" onclick="removeDamagePhoto(${index})">×</button></div>`).join('');
+}
+
+window.removeDamagePhoto=function(index){
+  dmgPhotos=dmgPhotos.filter((_,photoIndex)=>photoIndex!==index);
+  renderDamagePhotoPreview();
+  const input=document.getElementById('dmg-photo-input');
+  if(input)input.value='';
+};
+
+function renderDamageAssessmentStep(report){
+  const estimate=getDamageEstimate(report.severity||dmgSeverity);
+  document.getElementById('dp-2').innerHTML=`<div class="info-panel" style="margin-bottom:14px;"><strong>⚠ Damage assessment submitted</strong><br/>Your report for <strong>${report.bikeLabel||'the selected bike'}</strong> has been sent to the bike owner and our team. You can continue to payment once you review the estimate below.</div><div class="card-box"><div class="section-head">Estimated costs</div><div class="sumrow"><span>${estimate.label}</span><span>${formatCurrency(estimate.repair)}</span></div><div class="sumrow"><span>Service centre handling</span><span>${formatCurrency(estimate.service)}</span></div><div class="sumrow tot"><span>Your estimated liability</span><span>${formatCurrency(estimate.repair+estimate.service)}</span></div></div><button class="lbtnblue" onclick="dmgStep(3)">Proceed to payment →</button>`;
+  document.getElementById('dp-3').innerHTML=`<div class="card-box" style="margin-bottom:14px;"><div class="sumrow"><span>Repair cost</span><span>${formatCurrency(estimate.repair)}</span></div><div class="sumrow"><span>Service centre fee</span><span>${formatCurrency(estimate.service)}</span></div><div class="sumrow tot"><span>Total due</span><span>${formatCurrency(estimate.repair+estimate.service)}</span></div></div><button class="lbtnblue" onclick="payDamage(${estimate.repair+estimate.service})">Pay ${formatCurrency(estimate.repair+estimate.service)} via Razorpay →</button><div style="font-size:11px;color:var(--txt2);text-align:center;margin-top:10px;">Secured by Razorpay · GPay, card, UPI accepted</div>`;
+  document.getElementById('dp-4').innerHTML=`<div class="success-panel" style="margin-bottom:14px;">✅ Payment received! The service request for <strong>${report.bikeLabel||'your bike'}</strong> is now active.</div><div class="card-box"><div style="font-size:13px;font-weight:700;color:var(--txt);margin-bottom:4px;">RideShare partner service desk</div><div style="font-size:12px;color:var(--txt2);line-height:1.7;">We have recorded your claim and notified the owner. Our service team will contact you using your registered phone number with the next inspection slot.<br/>📌 Reference: <strong>${report.id||latestDamageReportId||''}</strong></div><button class="lbtnblue" style="margin-top:12px;font-size:12px;" onclick="navTo('bookings')">Back to bookings →</button></div><div style="font-size:11px;color:var(--txt2);margin-top:10px;text-align:center;">The damaged bike remains blocked for new rentals until the report is resolved.</div>`;
+}
+
+window.handleDmgPhotos=function(input){
+  const files=[...(input.files||[])];
+  if(!files.length)return;
+  dmgPhotos=[...dmgPhotos,...files].slice(0,5);
+  renderDamagePhotoPreview();
+  input.value='';
+  toast(`${dmgPhotos.length} photo(s) ready`,'info');
+};
+
+window.submitDamageReport=async function(){
+  const bikeId=document.getElementById('dmg-bike-sel').value;
+  const desc=document.getElementById('dmg-description').value.trim();
+  if(!bikeId){toast('Please select the bike','fail');return;}
+  if(dmgPhotos.length<2){toast('Please upload at least 2 photos','fail');return;}
+  if(!desc){toast('Please describe what happened','fail');return;}
+  if(!currentUser){toast('Please sign in first','fail');return;}
+  toast('Submitting damage report...','info');
+  try{
+    const bikeChoice=damageBikeChoices.find(choice=>choice.id===bikeId)||{};
+    const estimate=getDamageEstimate(dmgSeverity);
+    const attachments=[];
+    for(const f of dmgPhotos.slice(0,5)){
+      attachments.push(await uploadPrivateFile(f,'damage','damage_photo'));
+    }
+    const reportRef=await addDoc(collection(db,'damage_reports'),{userId:currentUser.uid,userEmail:currentUser.email,userName:currentUser.displayName,bikeId,bikeLabel:bikeChoice.label||bikeId,ownerUid:bikeChoice.ownerUid||null,severity:dmgSeverity,description:desc,type:document.getElementById('dmg-type-sel').value,date:document.getElementById('dmg-date').value,time:document.getElementById('dmg-time').value,attachments,estimatedRepair:estimate.repair,serviceFee:estimate.service,estimatedAmount:estimate.repair+estimate.service,status:'submitted',createdAt:serverTimestamp()});
+    latestDamageReportId=reportRef.id;
+    renderDamageAssessmentStep({id:reportRef.id,bikeLabel:bikeChoice.label||bikeId,severity:dmgSeverity});
+    dmgPhotos=[];
+    renderDamagePhotoPreview();
+    toast('Report submitted! Email sent to your inbox.','ok');
+    dmgStep(2);
+  }catch(e){toast(e?.message||'Unable to submit the damage report.','fail');}
+};
+
+window.dmgStep=function(n){
+  dmgCurStep=n;
+  [1,2,3,4].forEach(i=>{const s=document.getElementById('ds'+i);if(s)s.className='dmg-step'+(i<n?' done':i===n?' active':'');const p=document.getElementById('dp-'+i);if(p)p.style.display=i===n?'block':'none';});
+};
+window.payDamage=function(amt){
+  if(!latestDamageReportId){toast('Please submit the damage report first','fail');return;}
+  createDamagePaymentOrderFn({reportId:latestDamageReportId,amount:amt}).then(({data})=>{
+    if(typeof Razorpay!=='function')throw new Error('Razorpay checkout is not available.');
+    const rzp=new Razorpay({
+      key:data.keyId,
+      order_id:data.orderId,
+      amount:data.amount,
+      currency:data.currency,
+      name:'RideShare Damage',
+      description:'Vehicle damage payment',
+      theme:{color:'#1565C0'},
+      handler:async(resp)=>{
+        await verifyDamagePaymentFn({reportId:latestDamageReportId,orderId:resp.razorpay_order_id,paymentId:resp.razorpay_payment_id,signature:resp.razorpay_signature});
+        toast('Payment received!','ok');dmgStep(4);
+      }
+    });
+    rzp.on('payment.failed',()=>toast('Damage payment failed. Please try again.','fail'));
+    rzp.open();
+  }).catch((e)=>toast(e?.message||'Unable to start damage payment.','fail'));
+};
+
+/* ════ LISTINGS ════ */
+window.selectListing=function(id){selectedListingId=id;renderListings();};
+window.toggleListing=async function(id,active){
+  const listing=ownerListings.find(item=>item.id===id);
+  try{
+    await apiRequest(`/listings/${id}/toggle`,{method:'PATCH',body:{active}});
+    toast(`${listing?.name||'Listing'} ${active?'listed':'unlisted'}`,'ok');
+  }catch(e){toast(e?.message||'Unable to update the listing state.','fail');renderListings();}
+};
+window.toggleDay=function(btn){btn.classList.toggle('on');};
+window.saveSchedule=async function(){
+  if(!selectedListingId){toast('Please select a listing first.','info');return;}
+  const days=[...document.querySelectorAll('#day-grid .day-btn.on')].map(btn=>btn.textContent.trim());
+  const from=document.getElementById('avail-from').value;
+  const to=document.getElementById('avail-to').value;
+  const minimumDuration=document.getElementById('min-duration-select').value;
+  const price=Number(document.getElementById('schedule-price-input').value);
+  try{
+    await apiRequest(`/listings/${selectedListingId}`,{method:'PATCH',body:{price,schedule:{days,from,to,minimumDuration}}});
+    toast('Schedule saved!','ok');
+  }catch(e){toast(e?.message||'Unable to save the schedule.','fail');}
+};
+window.deleteListing=async function(id){
+  const listing=ownerListings.find(item=>item.id===id);
+  if(!listing)return;
+  try{
+    await apiRequest(`/listings/${id}`,{method:'DELETE'});
+    toast(`${listing.name} removed from listings`,'info');
+  }catch(e){toast(e?.message||'Unable to remove the listing.','fail');}
+};
+window.openEditListing=function(id){
+  const listing=ownerListings.find(item=>item.id===id);
+  if(!listing)return;
+  selectedListingId=id;
+  document.getElementById('edit-listing-name').textContent=`${listing.name} · ${listing.bikeType||'Bike'}`;
+  document.getElementById('edit-price').value=listing.price||'';
+  document.getElementById('edit-desc').value=listing.conditionNotes||'';
+  openModal('modal-edit-listing');
+};
+window.saveListingEdit=async function(){
+  if(!selectedListingId){toast('Please select a listing first.','info');return;}
+  const price=Number(document.getElementById('edit-price').value);
+  const conditionNotes=document.getElementById('edit-desc').value.trim();
+  try{
+    await apiRequest(`/listings/${selectedListingId}`,{method:'PATCH',body:{price,conditionNotes}});
+    toast('Listing updated!','ok');
+    closeModal('modal-edit-listing');
+  }catch(e){toast(e?.message||'Unable to update the listing.','fail');}
+};
+window.resetListingForm=function(){
+  document.getElementById('listing-bike-type').value='Scooter';
+  document.getElementById('listing-bike-name').value='';
+  document.getElementById('listing-bike-reg').value='';
+  document.getElementById('listing-bike-price').value='';
+  document.getElementById('listing-from').value='09:00';
+  document.getElementById('listing-to').value='17:00';
+  document.getElementById('listing-min-duration').value='1 hour';
+  document.getElementById('listing-bike-cond').value='';
+  clearListingPhoto();
+  document.querySelectorAll('#create-day-grid .day-btn').forEach(btn=>btn.classList.add('on'));
+  const phoneField=document.getElementById('listing-contact-number');
+  phoneField.value=document.getElementById('prof-phone').value.trim();
+};
+window.addBikeListing=async function(){
+  const bikeType=document.getElementById('listing-bike-type').value;
+  const name=document.getElementById('listing-bike-name').value.trim();
+  const contactNumber=document.getElementById('listing-contact-number').value.trim();
+  const registrationNumber=document.getElementById('listing-bike-reg').value.trim().toUpperCase();
+  const price=Number(document.getElementById('listing-bike-price').value);
+  const from=document.getElementById('listing-from').value;
+  const to=document.getElementById('listing-to').value;
+  const minimumDuration=document.getElementById('listing-min-duration').value;
+  const days=[...document.querySelectorAll('#create-day-grid .day-btn.on')].map(btn=>btn.textContent.trim());
+  const conditionNotes=document.getElementById('listing-bike-cond').value.trim();
+  const photoFile=document.getElementById('listing-bike-photo').files[0];
+  if(!name){toast('Please enter the bike name','fail');return;}
+  if(!contactNumber){toast('Please enter your contact number','fail');return;}
+  if(!price){toast('Please enter a price','fail');return;}
+  if(!registrationNumber){toast('Please enter the registration number','fail');return;}
+  if(!from||!to){toast('Please enter the available hours','fail');return;}
+  if(!days.length){toast('Please choose at least one working day','fail');return;}
+  let photoUploadId=null;
+  try{
+    if(photoFile){
+      if(photoFile.size>8*1024*1024){throw new Error('Bike photo must be under 8MB.');}
+      photoUploadId=(await uploadPrivateFile(photoFile,'listing','bike_photo')).uploadId;
+    }
+    await apiRequest('/listings',{method:'POST',body:{bikeType,name,contactNumber,registrationNumber,price,conditionNotes,photoUploadId,schedule:{days,from,to,minimumDuration}}});
+    toast(`${name} is now live for renters.`,'ok');
+    resetListingForm();
+  }catch(e){toast(e?.message||'Unable to create the listing.','fail');}
+};
+
+/* ════ EARNINGS / RAZORPAY ════ */
+window.initiateWithdrawal=async function(){
+  const pending=parseFloat((document.getElementById('earn-pending').textContent||'0').replace(/[^\d.]/g,''));
+  if(!pending){toast('No pending balance available to withdraw.','info');return;}
+  try{
+    await requestWithdrawalFn({amount:pending});
+    document.getElementById('earn-pending').textContent='₹0.00';
+    toast('Withdrawal request submitted. It will be processed in 2–3 business days.','ok');
+  }catch(e){toast(e?.message||'Unable to request a withdrawal.','fail');}
+};
+window.saveBankDetails=async function(){
+  const name=document.getElementById('bank-name').value.trim();
+  const acc=document.getElementById('bank-acc').value.trim();
+  const ifsc=document.getElementById('bank-ifsc').value.trim();
+  if(!name||!ifsc){toast('Please fill required fields','fail');return;}
+  try{
+    await saveBankAccountFn({holderName:name,accountNumber:acc,ifsc,bankName:document.getElementById('bank-bank').value.trim(),upi:document.getElementById('bank-upi').value.trim()});
+    toast('Bank details saved securely! ✓','ok');closeModal('modal-payment-setup');
+  }catch(e){toast(e?.message||'Unable to save bank details.','fail');}
+};
+
+/* ════ BOOKINGS ACTIONS ════ */
+window.cancelBooking=()=>{toast('Booking cancelled. Refund in 3–5 days.','ok');closeModal('modal-cancel');};
+window.confirmExtend=()=>{const hrs=document.getElementById('extend-sel').value;toast(`Ride extended by ${hrs==='0.5'?'30 min':''+parseFloat(hrs)+' hr'}!`,'ok');closeModal('modal-extend');};
+window.contactOwner=(phone,name='Owner')=>{
+  const dial=String(phone||'').replace(/[^\d+]/g,'');
+  if(!dial){toast(`No contact number available for ${name}.`,'info');return;}
+  window.location.href=`tel:${dial}`;
+};
+
+/* ════ MISC ════ */
+window.openRatingModal=function(bike,owner){selStar=4;document.getElementById('rate-bike-name').textContent=bike;setStars(4);document.getElementById('review-text').value='';openModal('modal-rating');};
+setSev('minor');
+document.getElementById('dmg-date').valueAsDate=new Date();
+document.getElementById('dmg-time').value=new Date().toTimeString().slice(0,5);
+</script>
